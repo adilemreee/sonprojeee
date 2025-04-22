@@ -11,6 +11,8 @@ struct CreateFromMampView: View {
     @State private var tunnelName: String = ""
     @State private var configName: String = ""
     @State private var hostname: String = ""
+    // State Değişkeni Ekle
+    @State private var portString: String = "" // Yeni port state'i
 
     // UI State
     @State private var isCreating: Bool = false
@@ -30,12 +32,16 @@ struct CreateFromMampView: View {
     var documentRootExists: Bool { !documentRoot.isEmpty && FileManager.default.fileExists(atPath: documentRoot) }
 
     // Validation
+    // isFormValid'e port kontrolü ekle
     var isFormValid: Bool {
          !selectedSite.isEmpty &&
          !tunnelName.isEmpty && tunnelName.rangeOfCharacter(from: .whitespacesAndNewlines) == nil &&
          !configName.isEmpty && configName.rangeOfCharacter(from: CharacterSet(charactersIn: "/\\:")) == nil &&
          !hostname.isEmpty && hostname.contains(".") && hostname.rangeOfCharacter(from: .whitespacesAndNewlines) == nil &&
-         documentRootExists // Document root derived from selection must exist
+         documentRootExists && // Mevcut satır
+         // -------- YENİ PORT KONTROLLERİ --------
+         !portString.isEmpty && Int(portString) != nil && (1...65535).contains(Int(portString)!)
+         // ------------------------------------
     }
 
 
@@ -77,7 +83,19 @@ struct CreateFromMampView: View {
                     HStack { Text("Tünel Adı:").frame(width: 100, alignment: .trailing); TextField("Cloudflare'deki Ad (boşluksuz)", text: $tunnelName) }
                     HStack { Text("Config Adı:").frame(width: 100, alignment: .trailing); TextField("Yerel .yml Dosya Adı", text: $configName) }
                     HStack { Text("Hostname:").frame(width: 100, alignment: .trailing); TextField("Erişilecek Alan Adı", text: $hostname).help("DNS kaydını Cloudflare'de oluşturmanız gerekebilir.") }
-                    HStack { Text("Yerel Port:").frame(width: 100, alignment: .trailing); Text(mampPortString).foregroundColor(.gray) }
+                    // Port TextField'ını Ekle (Eski Text yerine)
+                    HStack {
+                        Text("Yerel Port:").frame(width: 100, alignment: .trailing)
+                        TextField("Port (örn: 8888)", text: $portString)
+                            .frame(maxWidth: 100)
+                            .onChange(of: portString) { newValue in
+                                let filtered = newValue.filter { "0123456789".contains($0) }
+                                let clamped = String(filtered.prefix(5))
+                                if clamped != newValue {
+                                     DispatchQueue.main.async { portString = clamped } // Ana thread'de güncelle
+                                }
+                            }
+                    }
                 }
 
                 Divider()
@@ -105,7 +123,10 @@ struct CreateFromMampView: View {
         } // End VStack
         .padding()
         .frame(minWidth: 500, idealWidth: 550, minHeight: 380, idealHeight: 430) // Adjusted height
-        .onAppear(perform: loadMampSites)
+        .onAppear { // 'perform:' kısmını kaldırıp süslü parantez kullanın eğer yoksa
+            loadMampSites()
+            portString = "\(tunnelManager.defaultMampPort)" // Varsayılan MAMP portunu ayarla
+        }
         .alert("Hata", isPresented: $showErrorAlert, actions: { Button("Tamam") { } }, message: { Text(errorMessage) })
         .alert("Başarılı", isPresented: $showSuccessAlert, actions: { Button("Tamamlandı") { dismiss() } }, message: { Text(successMessage) })
     } // End body
@@ -152,7 +173,7 @@ struct CreateFromMampView: View {
                     creationStatus = "Yapılandırma dosyası '\(configName).yml' oluşturuluyor..."
 
                     // Step 2: Create local config file (always pass documentRoot for MAMP)
-                    tunnelManager.createConfigFile(configName: self.configName, tunnelUUID: tunnelData.uuid, credentialsPath: tunnelData.jsonPath, hostname: self.hostname, port: self.mampPortString, documentRoot: self.documentRoot) { configResult in
+                    tunnelManager.createConfigFile(configName: self.configName, tunnelUUID: tunnelData.uuid, credentialsPath: tunnelData.jsonPath, hostname: self.hostname,   port: self.portString, documentRoot: self.documentRoot) { configResult in
                         DispatchQueue.main.async {
                             switch configResult {
                             case .success(let configPath):

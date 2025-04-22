@@ -409,36 +409,56 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     
     @objc func routeDnsForTunnelAction(_ sender: NSMenuItem) {
         guard let tunnel = sender.representedObject as? TunnelInfo, tunnel.isManaged, let tunnelManager = tunnelManager else { return }
-        let suggestedHostname = tunnelManager.findHostname(for: tunnel.configPath ?? "") ?? "\(tunnel.name.filter { $0.isLetter || $0.isNumber || $0 == "-" }).your-domain.com" // Sanitize suggestion
-        
-        let alert = NSAlert(); alert.messageText = "DNS Kaydı Yönlendir"; alert.informativeText = "'\(tunnel.name)' (UUID: \(tunnel.uuidFromConfig ?? "N/A")) tüneline yönlendirilecek hostname'i girin:"; alert.addButton(withTitle: "Yönlendir"); alert.addButton(withTitle: "İptal")
-        let inputField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24)); inputField.stringValue = suggestedHostname; inputField.placeholderString = "örn: app.alanadiniz.com"; alert.accessoryView = inputField;
-        
-        DispatchQueue.main.async { // Present alert on main thread
-            NSApp.activate(ignoringOtherApps: true)
-            alert.window.initialFirstResponder = inputField // Set focus
-            let windowForSheet = NSApp.keyWindow ?? NSWindow() // Use key window or temporary fallback
-            alert.beginSheetModal(for: windowForSheet) { [weak self] response in
-                guard let self = self else { return }
-                if response == .alertFirstButtonReturn {
-                    let hostname = inputField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !hostname.isEmpty && hostname.contains(".") else {
-                        self.showErrorAlert(message: "Geçersiz hostname formatı."); return
+        let suggestedHostname = tunnelManager.findHostname(for: tunnel.configPath ?? "") ?? "\(tunnel.name.filter { $0.isLetter || $0.isNumber || $0 == "-" }).adilemre.xyz" // Sanitize suggestion
+
+        let alert = NSAlert()
+        alert.messageText = "DNS Kaydı Yönlendir"
+        alert.informativeText = "'\(tunnel.name)' (UUID: \(tunnel.uuidFromConfig ?? "N/A")) tüneline yönlendirilecek hostname'i girin:"
+        alert.addButton(withTitle: "Yönlendir")
+        alert.addButton(withTitle: "İptal")
+
+        let inputField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+        inputField.stringValue = suggestedHostname
+        inputField.placeholderString = "örn: app.alanadiniz.com"
+        alert.accessoryView = inputField
+        // İlk yanıtlayıcıyı runModal'dan ÖNCE ayarlayın.
+        alert.window.initialFirstResponder = inputField
+
+        // Uygulamayı öne getirin, böylece alert diyalogu görünür olur.
+        NSApp.activate(ignoringOtherApps: true)
+
+        // --- DEĞİŞİKLİK BURADA ---
+        // beginSheetModal ve completion handler yerine runModal kullanın.
+        // runModal, kullanıcı bir butona basana kadar bu satırda bekler (senkron).
+        let response = alert.runModal()
+        // --- DEĞİŞİKLİK SONU ---
+
+        // Kullanıcı "Yönlendir" butonuna bastıysa devam et
+        if response == .alertFirstButtonReturn {
+            let hostname = inputField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !hostname.isEmpty && hostname.contains(".") else {
+                // runModal sonrası zaten ana thread'deyiz, tekrar Dispatch gerekmez.
+                self.showErrorAlert(message: "Geçersiz hostname formatı.")
+                return
+            }
+
+            // Asenkron DNS yönlendirme işlemini başlat
+            self.tunnelManager.routeDns(tunnelInfo: tunnel, hostname: hostname) { result in
+                // Sonuç geldiğinde UI güncellemesini ana thread'de yap
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let output):
+                        self.showInfoAlert(title: "DNS Yönlendirme Başarılı", message: "'\(hostname)' için DNS kaydı başarıyla oluşturuldu veya güncellendi.\n\n\(output)")
+                        self.sendUserNotification(identifier:"dns_routed_\(tunnel.id)_\(hostname)", title: "DNS Yönlendirildi", body: "\(hostname) -> \(tunnel.name)")
+                    case .failure(let error):
+                        self.showErrorAlert(message: "'\(hostname)' için DNS yönlendirme hatası:\n\(error.localizedDescription)")
                     }
-                    self.tunnelManager.routeDns(tunnelInfo: tunnel, hostname: hostname) { result in
-                        DispatchQueue.main.async { // UI updates on main thread
-                            switch result {
-                            case .success(let output):
-                                self.showInfoAlert(title: "DNS Yönlendirme Başarılı", message: "'\(hostname)' için DNS kaydı başarıyla oluşturuldu veya güncellendi.\n\n\(output)");
-                                self.sendUserNotification(identifier:"dns_routed_\(tunnel.id)_\(hostname)", title: "DNS Yönlendirildi", body: "\(hostname) -> \(tunnel.name)")
-                            case .failure(let error):
-                                self.showErrorAlert(message: "'\(hostname)' için DNS yönlendirme hatası:\n\(error.localizedDescription)");
-                            }
-                        }
-                    }
-                } else { print("DNS yönlendirme iptal edildi.") }
-            } // End beginSheetModal
-        } // End DispatchQueue.main.async for alert presentation
+                }
+            }
+        } else {
+            // Kullanıcı "İptal" veya başka bir butona bastı (veya pencereyi kapattı)
+            print("DNS yönlendirme iptal edildi.")
+        }
     }
     
     // Quick Tunnel Actions

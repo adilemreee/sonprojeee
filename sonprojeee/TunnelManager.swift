@@ -556,8 +556,8 @@ class TunnelManager: ObservableObject {
 
              // Handle MAMP vHost update if requested.
              if let docRoot = documentRoot, !docRoot.isEmpty {
-                 updateMampVHost(serverName: hostname, documentRoot: docRoot, listenPort: "*:\(defaultMampPort)") { [weak self] vhostResult in
-                      guard let self = self else { return }
+                 updateMampVHost(serverName: hostname, documentRoot: docRoot, port: port) { [weak self] vhostResult in 
+                     guard let self = self else { return }
                       // Log/notify about vHost update result but don't fail the overall config creation
                       if case .failure(let vhostError) = vhostResult {
                            print("⚠️ MAMP vHost güncelleme hatası (ancak config dosyası oluşturuldu): \(vhostError)")
@@ -1256,72 +1256,113 @@ class TunnelManager: ObservableObject {
          return siteFolders.sorted()
      }
 
-     func updateMampVHost(serverName: String, documentRoot: String, listenPort: String = "*:8888", completion: @escaping (Result<Void, Error>) -> Void) {
-         guard FileManager.default.fileExists(atPath: documentRoot) else {
-             completion(.failure(NSError(domain: "VHostError", code: 20, userInfo: [NSLocalizedDescriptionKey: "DocumentRoot bulunamadı: \(documentRoot)"]))); return
-         }
-         guard !serverName.isEmpty && serverName.contains(".") else {
-             completion(.failure(NSError(domain: "VHostError", code: 21, userInfo: [NSLocalizedDescriptionKey: "Geçersiz ServerName: \(serverName)"]))); return
-         }
+    // updateMampVHost fonksiyonunu tamamen değiştirin
+    // updateMampVHost fonksiyonunu tamamen değiştirin (Hata düzeltmesi dahil)
+    func updateMampVHost(serverName: String, documentRoot: String, port: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard FileManager.default.fileExists(atPath: documentRoot) else {
+            completion(.failure(NSError(domain: "VHostError", code: 20, userInfo: [NSLocalizedDescriptionKey: "DocumentRoot bulunamadı: \(documentRoot)"]))); return
+        }
+        guard !serverName.isEmpty && serverName.contains(".") else {
+            completion(.failure(NSError(domain: "VHostError", code: 21, userInfo: [NSLocalizedDescriptionKey: "Geçersiz ServerName: \(serverName)"]))); return
+        }
+        // Port numarasının geçerli olup olmadığını kontrol et (ekstra güvenlik)
+        guard let portInt = Int(port), (1...65535).contains(portInt) else {
+            completion(.failure(NSError(domain: "VHostError", code: 25, userInfo: [NSLocalizedDescriptionKey: "Geçersiz Port Numarası: \(port)"]))); return
+        }
+        let listenDirective = "*:\(port)" // Dinleme direktifini oluştur
 
-         let vhostDir = (mampVHostConfPath as NSString).deletingLastPathComponent
-         var isDir : ObjCBool = false
-         if !FileManager.default.fileExists(atPath: vhostDir, isDirectory: &isDir) || !isDir.boolValue {
-             print("⚠️ MAMP vHost dizini bulunamadı, oluşturuluyor: \(vhostDir)")
-             do { try FileManager.default.createDirectory(atPath: vhostDir, withIntermediateDirectories: true, attributes: nil) } catch {
-                  completion(.failure(NSError(domain: "VHostError", code: 22, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dizini oluşturulamadı: \(vhostDir)\n\(error.localizedDescription)"]))); return
-             }
-         }
+        let vhostDir = (mampVHostConfPath as NSString).deletingLastPathComponent
+        var isDir : ObjCBool = false
+        if !FileManager.default.fileExists(atPath: vhostDir, isDirectory: &isDir) || !isDir.boolValue {
+            print("⚠️ MAMP vHost dizini bulunamadı, oluşturuluyor: \(vhostDir)")
+            do { try FileManager.default.createDirectory(atPath: vhostDir, withIntermediateDirectories: true, attributes: nil) } catch {
+                 completion(.failure(NSError(domain: "VHostError", code: 22, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dizini oluşturulamadı: \(vhostDir)\n\(error.localizedDescription)"]))); return
+            }
+        }
 
-         let vhostEntry = """
+        let vhostEntry = """
 
-         # Added by Cloudflared Manager App for \(serverName)
-         <VirtualHost \(listenPort)>
-             ServerName \(serverName)
-             DocumentRoot "\(documentRoot)"
-             # Optional Logs:
-             # ErrorLog "/Applications/MAMP/logs/apache_\(serverName.replacingOccurrences(of: ".", with: "_"))_error.log"
-             # CustomLog "/Applications/MAMP/logs/apache_\(serverName.replacingOccurrences(of: ".", with: "_"))_access.log" common
-             <Directory "\(documentRoot)">
-                 Options Indexes FollowSymLinks MultiViews ExecCGI
-                 AllowOverride All
-                 Require all granted
-             </Directory>
-         </VirtualHost>
+        # Added by Cloudflared Manager App for \(serverName) on port \(port)
+        <VirtualHost \(listenDirective)>
+            ServerName \(serverName)
+            DocumentRoot "\(documentRoot)"
+            # Optional Logs:
+            # ErrorLog "/Applications/MAMP/logs/apache_\(serverName.replacingOccurrences(of: ".", with: "_"))_error.log"
+            # CustomLog "/Applications/MAMP/logs/apache_\(serverName.replacingOccurrences(of: ".", with: "_"))_access.log" common
+            <Directory "\(documentRoot)">
+                Options Indexes FollowSymLinks MultiViews ExecCGI
+                AllowOverride All
+                Require all granted
+            </Directory>
+        </VirtualHost>
 
-         """
-         do {
-             var currentContent = ""
-             if FileManager.default.fileExists(atPath: mampVHostConfPath) {
-                 currentContent = try String(contentsOfFile: mampVHostConfPath, encoding: .utf8)
-             } else {
-                 print("⚠️ vHost dosyası bulunamadı, yeni dosya oluşturulacak: \(mampVHostConfPath)")
-                 currentContent = "# Virtual Hosts\nNameVirtualHost \(listenPort)\n\n"
-             }
+        """
+        do {
+            var currentContent = ""
+            if FileManager.default.fileExists(atPath: mampVHostConfPath) {
+                currentContent = try String(contentsOfFile: mampVHostConfPath, encoding: .utf8)
+            } else {
+                print("⚠️ vHost dosyası bulunamadı, yeni dosya oluşturulacak: \(mampVHostConfPath)")
+                // Yeni dosya oluşturuluyorsa NameVirtualHost direktifini ekle
+                currentContent = "# Virtual Hosts\nNameVirtualHost \(listenDirective)\n\n"
+            }
 
-             let serverNamePattern = #"ServerName\s+\Q\#(serverName)\E(\s+|$|#)"# // \Q \E for literal string in regex
-             if currentContent.range(of: serverNamePattern, options: .regularExpression) != nil {
-                  print("ℹ️ MAMP vHost dosyası zaten '\(serverName)' için giriş içeriyor. Güncelleme yapılmadı.")
-                  completion(.success(())); return
-             }
+            // --- BAŞLANGIÇ: Düzeltilmiş vHost Var mı Kontrolü ---
+            let serverNamePattern = #"ServerName\s+\Q\#(serverName)\E"#
+            // Noktanın yeni satırları da eşleştirmesi için (?s) flag'i yerine NSRegularExpression kullanıyoruz.
+            // Desen: <VirtualHost *:PORT> ... ServerName SERVER ... </VirtualHost>
+            let vhostBlockPattern = #"<VirtualHost\s+\*\:\#(port)>.*?\#(serverNamePattern).*?</VirtualHost>"#
 
-             let newContent = currentContent + vhostEntry
-             try newContent.write(toFile: mampVHostConfPath, atomically: true, encoding: .utf8)
-             print("✅ MAMP vHost dosyası güncellendi: \(mampVHostConfPath)")
-             completion(.success(()))
+            do {
+                // NSRegularExpression oluştur, .dotMatchesLineSeparators seçeneği ile
+                let regex = try NSRegularExpression(
+                    pattern: vhostBlockPattern,
+                    options: [.dotMatchesLineSeparators] // Bu seçenek NSRegularExpression'da mevcut
+                )
 
-         } catch {
-             print("❌ MAMP vHost dosyası güncellenirken HATA: \(error)")
-             let nsError = error as NSError
-             if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteNoPermissionError {
-                  completion(.failure(NSError(domain: "VHostError", code: 23, userInfo: [NSLocalizedDescriptionKey: "Yazma izni hatası: MAMP vHost dosyası güncellenemedi (\(mampVHostConfPath)). Lütfen dosya izinlerini kontrol edin veya manuel olarak ekleyin.\n\(error.localizedDescription)"])))
-             } else {
-                  completion(.failure(NSError(domain: "VHostError", code: 24, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dosyasına yazılamadı:\n\(error.localizedDescription)"])))
-             }
-         }
-     }
+                // Tüm içerikte ara
+                let searchRange = NSRange(currentContent.startIndex..<currentContent.endIndex, in: currentContent)
+                if regex.firstMatch(in: currentContent, options: [], range: searchRange) != nil {
+                    // Eşleşme bulunduysa, giriş zaten var demektir.
+                    print("ℹ️ MAMP vHost dosyası zaten '\(serverName)' için \(listenDirective) portunda giriş içeriyor. Güncelleme yapılmadı.")
+                    completion(.success(()))
+                    return // Fonksiyondan çık
+                }
+                // Eşleşme bulunamadı, devam et...
+            } catch {
+                // Regex oluşturma hatası (desen bozuksa olabilir, ama burada pek olası değil)
+                print("❌ Regex Hatası: \(error.localizedDescription) - Desen: \(vhostBlockPattern)")
+                completion(.failure(NSError(domain: "VHostError", code: 26, userInfo: [NSLocalizedDescriptionKey: "vHost kontrolü için regex oluşturulamadı: \(error.localizedDescription)"])))
+                return
+            }
+            // --- BİTİŞ: Düzeltilmiş vHost Var mı Kontrolü ---
 
 
+            // Eğer NameVirtualHost direktifi eksikse ve dosya boş değilse, ekle
+            if !currentContent.contains("NameVirtualHost \(listenDirective)") && !currentContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !currentContent.contains("NameVirtualHost ") { // Hiç NameVirtualHost yoksa
+                    currentContent = "# Virtual Hosts\nNameVirtualHost \(listenDirective)\n\n" + currentContent
+                } else {
+                    print("⚠️ Uyarı: vHost dosyasında başka NameVirtualHost direktifleri var. '\(listenDirective)' için direktif eklenmiyor. Manuel kontrol gerekebilir.")
+                }
+            }
+
+
+            let newContent = currentContent + vhostEntry
+            try newContent.write(toFile: mampVHostConfPath, atomically: true, encoding: .utf8)
+            print("✅ MAMP vHost dosyası güncellendi: \(mampVHostConfPath) (Port: \(port))")
+            completion(.success(()))
+
+        } catch {
+            print("❌ MAMP vHost dosyası güncellenirken HATA: \(error)")
+            let nsError = error as NSError
+            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteNoPermissionError {
+                 completion(.failure(NSError(domain: "VHostError", code: 23, userInfo: [NSLocalizedDescriptionKey: "Yazma izni hatası: MAMP vHost dosyası güncellenemedi (\(mampVHostConfPath)). Lütfen dosya izinlerini kontrol edin veya manuel olarak ekleyin.\n\(error.localizedDescription)"])))
+            } else {
+                 completion(.failure(NSError(domain: "VHostError", code: 24, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dosyasına yazılamadı:\n\(error.localizedDescription)"])))
+            }
+        }
+    }
     // MARK: - Launch At Login (ServiceManagement - Requires macOS 13+)
     // Note: ServiceManagement requires separate configuration (Helper Target or main app registration)
     // These functions assume SMAppService is available and configured correctly.
