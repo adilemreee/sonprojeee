@@ -44,7 +44,7 @@ class TunnelManager: ObservableObject {
     let mampConfigDirectoryPath: String // MAMP Apache config file DIRECTORY
     let mampSitesDirectoryPath: String // MAMP Sites (or htdocs) DIRECTORY
     let mampVHostConfPath: String      // Full path to MAMP vHost file
-
+    let mampHttpdConfPath: String
     // MAMP Apache default port
     let defaultMampPort = 8888
 
@@ -65,12 +65,12 @@ class TunnelManager: ObservableObject {
         mampConfigDirectoryPath = "/Applications/MAMP/conf/apache"
         mampSitesDirectoryPath = "/Applications/MAMP/" // Default MAMP htdocs
         mampVHostConfPath = "/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf"
-
+        mampHttpdConfPath = "/Applications/MAMP/conf/apache/httpd.conf" // <<< YENİ SABİTİ ATA >>>
         print("Cloudflared directory path: \(cloudflaredDirectoryPath)")
         print("Mamp Config directory path: \(mampConfigDirectoryPath)")
         print("Mamp Sites directory path: \(mampSitesDirectoryPath)")
         print("Mamp vHost path: \(mampVHostConfPath)")
-
+        print("Mamp httpd.conf path: \(mampHttpdConfPath)") // <<< LOG EKLE (opsiyonel) >>>
         // Initial check for cloudflared executable
         checkCloudflaredExecutable()
 
@@ -507,80 +507,123 @@ class TunnelManager: ObservableObject {
         do { try process.run() } catch { completion(.failure(error)) }
     }
 
-    // Updated to include documentRoot and call vHost update
+    // createConfigFile fonksiyonunu bulun ve içini aşağıdaki gibi düzenleyin:
     func createConfigFile(configName: String, tunnelUUID: String, credentialsPath: String, hostname: String, port: String, documentRoot: String?, completion: @escaping (Result<String, Error>) -> Void) {
-        print("📄 Yapılandırma dosyası oluşturuluyor: \(configName).yml")
-        let fileManager = FileManager.default
+         print("📄 Yapılandırma dosyası oluşturuluyor: \(configName).yml")
+            let fileManager = FileManager.default
 
-        // Ensure ~/.cloudflared directory exists
-        var isDir: ObjCBool = false
-        if !fileManager.fileExists(atPath: cloudflaredDirectoryPath, isDirectory: &isDir) || !isDir.boolValue {
-             do {
-                 try fileManager.createDirectory(atPath: cloudflaredDirectoryPath, withIntermediateDirectories: true, attributes: nil)
-             } catch {
-                 completion(.failure(NSError(domain: "FileSystemError", code: 4, userInfo: [NSLocalizedDescriptionKey:"~/.cloudflared dizini oluşturulamadı: \(error.localizedDescription)"]))); return
-             }
-         }
-
-         var cleanConfigName = configName.replacingOccurrences(of: ".yaml", with: "").replacingOccurrences(of: ".yml", with: "")
-         cleanConfigName = cleanConfigName.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "\\", with: "_")
-         if cleanConfigName.isEmpty {
-              completion(.failure(NSError(domain: "InputError", code: 12, userInfo: [NSLocalizedDescriptionKey: "Geçersiz config dosyası adı."]))); return
-         }
-         let targetPath = "\(cloudflaredDirectoryPath)/\(cleanConfigName).yml"
-         if fileManager.fileExists(atPath: targetPath) {
-             completion(.failure(NSError(domain: "CloudflaredManagerError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Yapılandırma dosyası zaten mevcut: \(targetPath)"]))); return
-         }
-
-         // Use the absolute path for credentials-file as provided by `tunnel create`
-         let absoluteCredentialsPath = (credentialsPath as NSString).standardizingPath
-
-         let yamlContent = """
-         # Tunnel Configuration managed by Cloudflared Manager App
-         # Tunnel UUID: \(tunnelUUID)
-         # Config File: \(targetPath)
-
-         tunnel: \(tunnelUUID)
-         credentials-file: \(absoluteCredentialsPath) # Use absolute path
-
-         ingress:
-           - hostname: \(hostname)
-             service: http://localhost:\(port)
-           # Catch-all rule MUST be last
-           - service: http_status:404
-         """
-
-         do {
-             try yamlContent.write(toFile: targetPath, atomically: true, encoding: .utf8)
-             print("   ✅ Yapılandırma dosyası oluşturuldu: \(targetPath)")
-
-             // Handle MAMP vHost update if requested.
-             if let docRoot = documentRoot, !docRoot.isEmpty {
-                 updateMampVHost(serverName: hostname, documentRoot: docRoot, port: port) { [weak self] vhostResult in 
-                     guard let self = self else { return }
-                      // Log/notify about vHost update result but don't fail the overall config creation
-                      if case .failure(let vhostError) = vhostResult {
-                           print("⚠️ MAMP vHost güncelleme hatası (ancak config dosyası oluşturuldu): \(vhostError)")
-                           self.postUserNotification(identifier: "vhost_fail_\(cleanConfigName)", title: "vHost Güncelleme Hatası", body: "'\(hostname)' için vHost güncellenemedi. İzinleri kontrol edin veya manuel ekleyin.\n\(vhostError.localizedDescription)")
-                      } else {
-                          print("✅ MAMP vHost dosyası başarıyla güncellendi (veya zaten vardı).")
-                          self.postUserNotification(identifier: "vhost_success_\(cleanConfigName)", title: "vHost Güncellendi", body: "'\(hostname)' için vHost güncellendi. Ayarların etkili olması için MAMP sunucularını yeniden başlatın.")
-                      }
+            // Ensure ~/.cloudflared directory exists
+            var isDir: ObjCBool = false
+            if !fileManager.fileExists(atPath: cloudflaredDirectoryPath, isDirectory: &isDir) || !isDir.boolValue {
+                 do {
+                     try fileManager.createDirectory(atPath: cloudflaredDirectoryPath, withIntermediateDirectories: true, attributes: nil)
+                 } catch {
+                     completion(.failure(NSError(domain: "FileSystemError", code: 4, userInfo: [NSLocalizedDescriptionKey:"~/.cloudflared dizini oluşturulamadı: \(error.localizedDescription)"]))); return
                  }
-             } else {
-                  print("ℹ️ DocumentRoot belirtilmedi veya boş, MAMP vHost güncellenmedi.")
              }
 
-             postUserNotification(identifier: "config_created_\(cleanConfigName)", title: "Config Oluşturuldu", body: "'\(cleanConfigName).yml' dosyası oluşturuldu.")
-             findManagedTunnels() // Refresh list to show the new tunnel
-             completion(.success(targetPath)) // Report overall success
+             var cleanConfigName = configName.replacingOccurrences(of: ".yaml", with: "").replacingOccurrences(of: ".yml", with: "")
+             cleanConfigName = cleanConfigName.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "\\", with: "_")
+             if cleanConfigName.isEmpty {
+                  completion(.failure(NSError(domain: "InputError", code: 12, userInfo: [NSLocalizedDescriptionKey: "Geçersiz config dosyası adı."]))); return
+             }
+             let targetPath = "\(cloudflaredDirectoryPath)/\(cleanConfigName).yml"
+             if fileManager.fileExists(atPath: targetPath) {
+                 completion(.failure(NSError(domain: "CloudflaredManagerError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Yapılandırma dosyası zaten mevcut: \(targetPath)"]))); return
+             }
 
-         } catch {
-             print("❌ Hata: Yapılandırma dosyası yazılamadı: \(targetPath) - \(error)")
-             completion(.failure(error))
-         }
-     }
+             // Use the absolute path for credentials-file as provided by `tunnel create`
+             let absoluteCredentialsPath = (credentialsPath as NSString).standardizingPath
 
+             let yamlContent = """
+             # Tunnel Configuration managed by Cloudflared Manager App
+             # Tunnel UUID: \(tunnelUUID)
+             # Config File: \(targetPath)
+
+             tunnel: \(tunnelUUID)
+             credentials-file: \(absoluteCredentialsPath) # Use absolute path
+
+             ingress:
+               - hostname: \(hostname)
+                 service: http://localhost:\(port)
+               # Catch-all rule MUST be last
+               - service: http_status:404
+             """
+
+        do {
+            try yamlContent.write(toFile: targetPath, atomically: true, encoding: .utf8)
+            print("   ✅ Yapılandırma dosyası oluşturuldu: \(targetPath)")
+
+            // --- MAMP Güncellemeleri (DispatchGroup ile Eş Zamanlı) ---
+            var vhostUpdateError: Error? = nil
+            var listenUpdateError: Error? = nil
+            let mampUpdateGroup = DispatchGroup() // Eş zamanlılık için
+
+            // Sadece documentRoot varsa MAMP güncellemelerini yap
+            if let docRoot = documentRoot, !docRoot.isEmpty {
+                // 1. vHost Güncellemesi
+                mampUpdateGroup.enter()
+                updateMampVHost(serverName: hostname, documentRoot: docRoot, port: port) { result in
+                    if case .failure(let error) = result {
+                        vhostUpdateError = error // Hatayı sakla
+                        print("⚠️ MAMP vHost güncelleme hatası: \(error.localizedDescription)")
+                        // (Bildirim zaten updateMampVHost içinde gönderiliyor)
+                    } else {
+                        print("✅ MAMP vHost dosyası başarıyla güncellendi (veya zaten vardı).")
+                    }
+                    mampUpdateGroup.leave()
+                }
+
+                // 2. httpd.conf Listen Güncellemesi
+                mampUpdateGroup.enter()
+                updateMampHttpdConfListen(port: port) { result in
+                    if case .failure(let error) = result {
+                        listenUpdateError = error // Hatayı sakla
+                        print("⚠️ MAMP httpd.conf Listen güncelleme hatası: \(error.localizedDescription)")
+                        // (Bildirim updateMampHttpdConfListen içinde gönderiliyor, ama burada tekrar gönderebiliriz)
+                         self.postUserNotification(identifier: "mamp_httpd_update_fail_\(port)", title: "MAMP httpd.conf Hatası", body: "'Listen \(port)' eklenemedi. İzinleri kontrol edin veya manuel ekleyin.\n\(error.localizedDescription)")
+                    } else {
+                        print("✅ MAMP httpd.conf Listen direktifi başarıyla güncellendi (veya zaten vardı).")
+                    }
+                    mampUpdateGroup.leave()
+                }
+            } else {
+                 print("ℹ️ DocumentRoot belirtilmedi veya boş, MAMP yapılandırma dosyaları güncellenmedi.")
+            }
+
+            // MAMP güncellemelerinin bitmesini bekle ve sonucu bildir
+            mampUpdateGroup.notify(queue: .main) { [weak self] in
+                 guard let self = self else { return }
+                 self.findManagedTunnels() // Listeyi yenile
+
+                 // Genel sonucu bildir
+                 if vhostUpdateError == nil && listenUpdateError == nil {
+                      // Her iki MAMP güncellemesi de başarılı (veya gerekmiyordu)
+                      self.postUserNotification(identifier: "config_created_\(cleanConfigName)", title: "Config Oluşturuldu", body: "'\(cleanConfigName).yml' dosyası oluşturuldu." + (documentRoot != nil ? " MAMP yapılandırması güncellendi." : ""))
+                      completion(.success(targetPath))
+                 } else {
+                      // Config başarılı ama MAMP güncellemelerinde hata var
+                      let combinedErrorDesc = [
+                          vhostUpdateError != nil ? "vHost: \(vhostUpdateError!.localizedDescription)" : nil,
+                          listenUpdateError != nil ? "httpd.conf: \(listenUpdateError!.localizedDescription)" : nil
+                      ].compactMap { $0 }.joined(separator: "\n")
+
+                      print("❌ Config oluşturuldu, ancak MAMP güncellemelerinde hata(lar) var.")
+                      // Kullanıcıya config'in başarılı olduğunu ama MAMP için uyarıyı bildir
+                      self.postUserNotification(identifier: "config_created_mamp_warn_\(cleanConfigName)", title: "Config Oluşturuldu (MAMP Uyarısı)", body: "'\(cleanConfigName).yml' oluşturuldu, ancak MAMP yapılandırması güncellenirken hata(lar) oluştu:\n\(combinedErrorDesc)\nLütfen MAMP ayarlarını manuel kontrol edin.")
+                      // Yine de başarı olarak dönebiliriz, çünkü tünel ve config tamamlandı.
+                      completion(.success(targetPath))
+                      // VEYA Hata olarak dönmek isterseniz:
+                      // let error = NSError(domain: "PartialSuccessError", code: 99, userInfo: [NSLocalizedDescriptionKey: "Config dosyası oluşturuldu, ancak MAMP güncellemelerinde hata(lar) oluştu:\n\(combinedErrorDesc)"])
+                      // completion(.failure(error))
+                 }
+            }
+        } catch {
+            // .yml dosyası yazılamadıysa
+            print("❌ Hata: Yapılandırma dosyası yazılamadı: \(targetPath) - \(error)")
+            completion(.failure(error))
+        }
+    } // createConfigFile sonu
 
     // MARK: - Tunnel Deletion (Revised - Removing --force temporarily)
     func deleteTunnel(tunnelInfo: TunnelInfo, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -792,6 +835,84 @@ class TunnelManager: ObservableObject {
             }
         }
         do { try process.run() } catch { completion(.failure(error)) }
+    }
+    
+    
+    
+    // TunnelManager sınıfının içine, tercihen updateMampVHost fonksiyonunun yakınına ekleyin:
+    private func updateMampHttpdConfListen(port: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let portInt = Int(port), (1...65535).contains(portInt) else {
+            completion(.failure(NSError(domain: "HttpdConfError", code: 30, userInfo: [NSLocalizedDescriptionKey: "Geçersiz Port Numarası: \(port)"])))
+            return
+        }
+        let listenDirective = "Listen \(port)" // Örn: "Listen 8080"
+        let httpdPath = mampHttpdConfPath
+
+        guard FileManager.default.fileExists(atPath: httpdPath) else {
+            completion(.failure(NSError(domain: "HttpdConfError", code: 31, userInfo: [NSLocalizedDescriptionKey: "MAMP httpd.conf dosyası bulunamadı: \(httpdPath)"])))
+            return
+        }
+
+        // Yazma iznini kontrol et (en azından üst dizine)
+        guard FileManager.default.isWritableFile(atPath: httpdPath) else {
+             completion(.failure(NSError(domain: "HttpdConfError", code: 32, userInfo: [NSLocalizedDescriptionKey: "Yazma izni hatası: MAMP httpd.conf dosyası güncellenemedi (\(httpdPath)). İzinleri kontrol edin."])))
+             return
+        }
+
+        do {
+            var currentContent = try String(contentsOfFile: httpdPath, encoding: .utf8)
+
+            // Direktifin zaten var olup olmadığını kontrol et (yorum satırları hariç)
+            // Regex: Satır başında boşluk olabilir, sonra "Listen", sonra boşluk, sonra port numarası, sonra boşluk veya satır sonu.
+            let pattern = #"^\s*Listen\s+\#(portInt)\s*(?:#.*)?$"#
+            if currentContent.range(of: pattern, options: .regularExpression) != nil {
+                print("ℹ️ MAMP httpd.conf zaten '\(listenDirective)' içeriyor.")
+                completion(.success(()))
+                return
+            }
+
+            // Ekleme noktasını bul: Son "Listen" satırının sonrasını hedefle
+            var insertionPoint = currentContent.endIndex
+            // Desen: Satır başı, boşluk olabilir, "Listen", boşluk, RAKAMLAR.
+            let lastListenPattern = #"^\s*Listen\s+\d+"#
+            // Sondan başlayarak ara
+            if let lastListenMatchRange = currentContent.range(of: lastListenPattern, options: [.regularExpression, .backwards]) {
+                // Bulunan satırın sonunu bul
+                if let lineEndRange = currentContent.range(of: "\n", options: [], range: lastListenMatchRange.upperBound..<currentContent.endIndex) {
+                    insertionPoint = lineEndRange.upperBound // Sonraki satırın başı
+                } else {
+                    // Dosyanın son satırıysa, sona eklemeden önce newline ekle
+                    if !currentContent.hasSuffix("\n") { currentContent += "\n" }
+                    insertionPoint = currentContent.endIndex
+                }
+            } else {
+                // Hiç "Listen" bulunamazsa (çok nadir), dosyanın sonuna ekle
+                print("⚠️ MAMP httpd.conf içinde 'Listen' direktifi bulunamadı. Sona ekleniyor.")
+                if !currentContent.hasSuffix("\n") { currentContent += "\n" }
+                insertionPoint = currentContent.endIndex
+            }
+
+            // Eklenecek içeriği hazırla
+            let contentToInsert = "\n# Added by Cloudflared Manager App for port \(port)\n\(listenDirective)\n"
+            currentContent.insert(contentsOf: contentToInsert, at: insertionPoint)
+
+            // Değiştirilmiş içeriği dosyaya yaz
+            try currentContent.write(toFile: httpdPath, atomically: true, encoding: .utf8)
+            print("✅ MAMP httpd.conf güncellendi: '\(listenDirective)' direktifi eklendi.")
+
+            // Kullanıcıyı bilgilendir (MAMP yeniden başlatma hatırlatması)
+            postUserNotification(
+                identifier: "mamp_httpd_listen_added_\(port)",
+                title: "MAMP httpd.conf Güncellendi",
+                body: "'\(listenDirective)' direktifi eklendi. Ayarların etkili olması için MAMP sunucularını yeniden başlatmanız gerekebilir."
+            )
+            completion(.success(()))
+
+        } catch {
+            print("❌ MAMP httpd.conf güncellenirken HATA: \(error)")
+            // Hata detayını completion'a ilet
+            completion(.failure(NSError(domain: "HttpdConfError", code: 33, userInfo: [NSLocalizedDescriptionKey: "MAMP httpd.conf okuma/yazma hatası: \(error.localizedDescription)"])))
+        }
     }
 
     // MARK: - Cloudflare Login

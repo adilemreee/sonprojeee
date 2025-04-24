@@ -178,7 +178,13 @@ struct CreateFromMampView: View {
                             switch configResult {
                             case .success(let configPath):
                                 isCreating = false
-                                successMessage = "MAMP sitesi '\(selectedSite)' için tünel '\(tunnelName)' ve yapılandırma '\((configPath as NSString).lastPathComponent)' başarıyla oluşturuldu.\n\nMAMP vHost dosyası güncellendi. MAMP sunucularını yeniden başlatın."
+                                successMessage = """
+                                        MAMP sitesi '\(selectedSite)' için tünel '\(tunnelName)' ve yapılandırma '\((configPath as NSString).lastPathComponent)' başarıyla oluşturuldu.
+
+                                        MAMP Apache yapılandırma dosyaları (vhost ve httpd.conf) güncellenmeye çalışıldı.
+
+                                        ⚠️ Ayarların etkili olması için MAMP sunucularını yeniden başlatmanız GEREKİR!
+                                        """
                                 showSuccessAlert = true // Trigger success alert & dismiss
 
                             case .failure(let configError):
