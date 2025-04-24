@@ -175,6 +175,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let range = text.range(of: pattern, options: .regularExpression) { return String(text[range]) }
         return nil
     }
+    
+    // --- NEW ACTIONS TO OPEN SPECIFIC FILES ---
+    @objc func openMampVHostFileAction() { // Opens vhost FILE
+        guard let path = tunnelManager?.mampVHostConfPath, FileManager.default.fileExists(atPath: path) else {
+            print("⚠️ MAMP vHost dosyası bulunamadı veya yol alınamadı: \(tunnelManager?.mampVHostConfPath ?? "N/A")")
+            // Optional: Show error to user if desired
+            // showErrorAlert(message: "MAMP httpd-vhosts.conf dosyası bulunamadı.")
+            return
+        }
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+
+    @objc func openMampHttpdConfFileAction() { // Opens httpd.conf FILE
+        guard let path = tunnelManager?.mampHttpdConfPath, FileManager.default.fileExists(atPath: path) else {
+            print("⚠️ MAMP httpd.conf dosyası bulunamadı veya yol alınamadı: \(tunnelManager?.mampHttpdConfPath ?? "N/A")")
+            // Optional: Show error to user if desired
+            // showErrorAlert(message: "MAMP httpd.conf dosyası bulunamadı.")
+            return
+        }
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+    // --- END NEW ACTIONS ---
 
     // MARK: - Menu Construction
     @objc func constructMenu() {
@@ -304,11 +326,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         menu.addItem(NSMenuItem.separator())
 
         // --- Folder Management ---
-        menu.addItem(withTitle: "Yönetim", action: nil, keyEquivalent: "").isEnabled = false
+        menu.addItem(withTitle: "Klasör Yönetim", action: nil, keyEquivalent: "").isEnabled = false
         let openCloudflaredItem = NSMenuItem(title: "~/.cloudflared Klasörünü Aç", action: #selector(openCloudflaredFolderAction), keyEquivalent: ""); openCloudflaredItem.target = self; openCloudflaredItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.cloudflaredDirectoryPath); menu.addItem(openCloudflaredItem)
         let openMampConfigItem = NSMenuItem(title: "MAMP Apache Conf Klasörünü Aç", action: #selector(openMampConfigFolderAction), keyEquivalent: ""); openMampConfigItem.target = self; openMampConfigItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampConfigDirectoryPath); menu.addItem(openMampConfigItem)
         menu.addItem(NSMenuItem.separator())
+        
+        menu.addItem(withTitle: "Dosya Yönetim", action: nil, keyEquivalent: "").isEnabled = false
+        // --- ADD NEW FILE OPENING ITEMS ---
+        let openVHostFileItem = NSMenuItem(title: "Dosyasını Aç (httpd-vhosts.conf)", action: #selector(openMampVHostFileAction), keyEquivalent: "")
+        openVHostFileItem.target = self
+        openVHostFileItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampVHostConfPath)
+        openVHostFileItem.toolTip = "MAMP'ın sanal konak yapılandırma dosyasını açar."
+        menu.addItem(openVHostFileItem)
 
+        let openHttpdFileItem = NSMenuItem(title: "Dosyasını Aç (httpd.conf)", action: #selector(openMampHttpdConfFileAction), keyEquivalent: "")
+        openHttpdFileItem.target = self
+        openHttpdFileItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampHttpdConfPath)
+        openHttpdFileItem.toolTip = "MAMP'ın ana Apache yapılandırma dosyasını açar."
+        menu.addItem(openHttpdFileItem)
+        // --- END NEW FILE OPENING ITEMS ---
+        menu.addItem(NSMenuItem.separator())
+        
         // --- [NEW] MAMP Server Control Section ---
         menu.addItem(withTitle: "MAMP Yönetimi", action: nil, keyEquivalent: "").isEnabled = false
         // Check if MAMP scripts exist and are executable
