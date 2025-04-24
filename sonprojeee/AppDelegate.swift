@@ -197,30 +197,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         NSWorkspace.shared.open(URL(fileURLWithPath: path))
     }
     
-    @objc func openTunnelSiteAction(_ sender: NSMenuItem) {
-         guard let tunnel = sender.representedObject as? TunnelInfo else {
-             print("❌ Hata: openTunnelSiteAction için TunnelInfo alınamadı.")
-             return
-         }
-         guard let hostname = tunnel.hostnameFromConfig, !hostname.isEmpty else {
-             print("⚠️ Uyarı: Site açılamadı, '\(tunnel.name)' tüneli için hostname bulunamadı veya boş.")
-             // İsteğe bağlı: Kullanıcıya hata mesajı gösterebilirsiniz.
-             // showErrorAlert(message: "'\(tunnel.name)' tüneli için yapılandırma dosyasında geçerli bir hostname bulunamadı.")
-             return
-         }
-
-         // URL'yi oluştur (HTTPS varsayıyoruz)
-         let urlString = "https://\(hostname)"
-         guard let url = URL(string: urlString) else {
-             print("❌ Hata: Geçersiz URL oluşturuldu: \(urlString)")
-             showErrorAlert(message: "Geçersiz URL formatı: \(urlString)")
-             return
-         }
-
-         print("🔗 Site açılıyor: \(url.absoluteString)")
-         // Varsayılan tarayıcıda URL'yi aç
-         NSWorkspace.shared.open(url)
-     }
+ 
     // --- END NEW ACTIONS ---
 
     // MARK: - Menu Construction
@@ -315,22 +292,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 let openConfigItem = NSMenuItem(title: "Config Dosyasını Aç (.yml)", action: #selector(openConfigFileAction(_:)), keyEquivalent: ""); openConfigItem.target = self; openConfigItem.representedObject = tunnel; openConfigItem.isEnabled = canOpenConfig; subMenu.addItem(openConfigItem)
                 let canRouteDns = tunnel.isManaged && isCloudflaredAvailable
                 let routeDnsItem = NSMenuItem(title: "DNS Kaydı Yönlendir...", action: #selector(routeDnsForTunnelAction(_:)), keyEquivalent: ""); routeDnsItem.target = self; routeDnsItem.representedObject = tunnel; routeDnsItem.isEnabled = canRouteDns; subMenu.addItem(routeDnsItem)
-                // --- YENİ SİTEYİ AÇ ÖĞESİ ---
-                            if let hostname = tunnel.hostnameFromConfig, !hostname.isEmpty {
-                                let openSiteItem = NSMenuItem(title: "Siteyi Aç (\(hostname))", action: #selector(openTunnelSiteAction(_:)), keyEquivalent: "")
-                                openSiteItem.target = self
-                                openSiteItem.representedObject = tunnel // Aksiyonun hangi tünel için olduğunu bilmesi için
-                                openSiteItem.toolTip = "https://\(hostname) adresini varsayılan tarayıcıda açar."
-                                openSiteItem.isEnabled = true // Hostname varsa etkin
-                                subMenu.addItem(openSiteItem)
-                            } else {
-                                // Hostname yoksa pasif bir öğe veya hiçbir şey göstermeyebilirsiniz
-                                let openSiteItem = NSMenuItem(title: "Siteyi Aç (Hostname Yok)", action: nil, keyEquivalent: "")
-                                openSiteItem.isEnabled = false
-                                openSiteItem.toolTip = "Bu tünel için config dosyasında geçerli bir hostname bulunamadı."
-                                subMenu.addItem(openSiteItem)
-                            }
-                            // --- YENİ ÖĞE SONU ---
                 subMenu.addItem(NSMenuItem.separator())
                 let canDelete = tunnel.isManaged && tunnel.status != .stopping && tunnel.status != .starting && isCloudflaredAvailable
                 let deleteItem = NSMenuItem(title: "Bu Tüneli Sil...", action: #selector(deleteTunnelAction(_:)), keyEquivalent: ""); deleteItem.target = self; deleteItem.representedObject = tunnel; deleteItem.isEnabled = canDelete; deleteItem.toolTip = "Cloudflare'dan tüneli ve isteğe bağlı yerel dosyaları siler. DİKKAT! Geri Alınamaz."
