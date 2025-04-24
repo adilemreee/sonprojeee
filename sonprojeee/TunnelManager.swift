@@ -63,7 +63,7 @@ class TunnelManager: ObservableObject {
         cloudflaredDirectoryPath = ("~/.cloudflared" as NSString).expandingTildeInPath
         // MAMP Paths (Adjust if MAMP is installed elsewhere or different version)
         mampConfigDirectoryPath = "/Applications/MAMP/conf/apache"
-        mampSitesDirectoryPath = "/Applications/MAMP/" // Default MAMP htdocs
+        mampSitesDirectoryPath = "/Applications/MAMP/sites" // Default MAMP htdocs
         mampVHostConfPath = "/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf"
         mampHttpdConfPath = "/Applications/MAMP/conf/apache/httpd.conf" // <<< YENİ SABİTİ ATA >>>
         print("Cloudflared directory path: \(cloudflaredDirectoryPath)")
