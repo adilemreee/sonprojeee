@@ -20,6 +20,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private let mampStartScript = "start.sh"
     private let mampStopScript = "stop.sh"
     // --- End MAMP Control Constants ---
+    
+    // --- Python Betik Sabitleri (GÜNCELLENDİ) ---
+    // DİKKAT: Bu yolları KENDİ sisteminize ve projenize göre DÜZENLEYİN!
+    private let pythonProjectDirectoryPath = "/Users/adilemre/Documents/PANEL-main" // Projenizin bulunduğu ANA DİZİN
+    private let pythonVenvName = "venv" // Sanal ortam klasörünün adı (genellikle venv)
+    private let pythonScriptPath = "app.py" // Proje DİZİNİNE GÖRE betiğin yolu VEYA TAM YOLU
+    // Eski pythonInterpreterPath (/usr/bin/python3 vb.) artık doğrudan kullanılmayacak, venv içindeki kullanılacak.
+    // --- BİTİŞ: Python Betik Sabitleri (GÜNCELLENDİ) ---
+
+    // --- Çalışan Python İşlemi Takibi ---
+    private var pythonAppProcess: Process?
+
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // 1. Initialize the Tunnel Manager
@@ -124,6 +136,98 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
         sendUserNotification(identifier: identifier, title: title, body: body)
     }
+    
+    @objc func startPythonAppAction() {
+        if let existingProcess = pythonAppProcess, existingProcess.isRunning {
+            // ... (zaten çalışıyor kontrolü aynı) ...
+            return
+        }
+
+        // --- BAŞLANGIÇ: Venv ve Betik Yollarını Hesaplama ---
+        let expandedProjectDirPath = (pythonProjectDirectoryPath as NSString).expandingTildeInPath
+        let venvPath = expandedProjectDirPath.appending("/").appending(pythonVenvName)
+        let venvInterpreterPath = venvPath.appending("/bin/python") // macOS/Linux için standart
+
+        // Betik yolunu belirle: Eğer "/" içermiyorsa proje dizinine göre, içeriyorsa tam yol kabul et
+        let finalScriptPath: String
+        if pythonScriptPath.contains("/") { // Tam yol gibi görünüyor
+             finalScriptPath = (pythonScriptPath as NSString).expandingTildeInPath
+        } else { // Proje dizinine göre
+             finalScriptPath = expandedProjectDirPath.appending("/").appending(pythonScriptPath)
+        }
+
+        // Gerekli dosyaların varlığını kontrol et
+        guard FileManager.default.fileExists(atPath: expandedProjectDirPath) else {
+            print("❌ Hata: Python proje dizini bulunamadı: \(expandedProjectDirPath)")
+            showErrorAlert(message: "Python proje dizini bulunamadı:\n\(expandedProjectDirPath)")
+            return
+        }
+         guard FileManager.default.fileExists(atPath: finalScriptPath) else {
+            print("❌ Hata: Python betiği bulunamadı: \(finalScriptPath)")
+            showErrorAlert(message: "Python betik dosyası bulunamadı:\n\(finalScriptPath)")
+            return
+        }
+        // --- BİTİŞ: Venv ve Betik Yollarını Hesaplama ---
+
+
+        // --- BAŞLANGIÇ: Çalıştırma Mantığını Güncelleme (Venv Öncelikli) ---
+        print("🚀 Python betiği başlatılıyor: \(finalScriptPath)")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+
+            let process = Process()
+            var interpreterToUse = "" // Kullanılacak yorumlayıcı yolu
+
+            // Venv yorumlayıcısını kontrol et
+            if FileManager.default.isExecutableFile(atPath: venvInterpreterPath) {
+                print("   Sanal ortam (venv) yorumlayıcısı kullanılacak: \(venvInterpreterPath)")
+                interpreterToUse = venvInterpreterPath
+                process.executableURL = URL(fileURLWithPath: interpreterToUse)
+                process.arguments = [finalScriptPath] // Argüman sadece betik yolu
+            } else {
+                // Venv bulunamadı, /usr/bin/env python3'ü fallback olarak kullan
+                interpreterToUse = "/usr/bin/env" // Fallback
+                print("⚠️ Uyarı: Sanal ortam yorumlayıcısı bulunamadı veya çalıştırılabilir değil: \(venvInterpreterPath). Fallback kullanılıyor: \(interpreterToUse) python3")
+                process.executableURL = URL(fileURLWithPath: interpreterToUse)
+                process.arguments = ["python3", finalScriptPath] // Fallback argümanları
+            }
+
+            // Çalışma dizinini ayarla (çok önemli)
+            process.currentDirectoryURL = URL(fileURLWithPath: expandedProjectDirPath)
+
+            // Termination Handler (içerik aynı, sadece log mesajını güncelleyebiliriz)
+            process.terminationHandler = { terminatedProcess in
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    print("🏁 Python betiği sonlandı (\((finalScriptPath as NSString).lastPathComponent)). Yorumlayıcı: \(interpreterToUse)")
+                    self.pythonAppProcess = nil
+                    self.constructMenu()
+                }
+            }
+            // --- BİTİŞ: Çalıştırma Mantığını Güncelleme ---
+
+            do {
+                try process.run()
+                DispatchQueue.main.async {
+                     print("✅ Python betiği başlatıldı: \(finalScriptPath), PID: \(process.processIdentifier), Yorumlayıcı: \(interpreterToUse)")
+                     self.pythonAppProcess = process
+                     self.constructMenu()
+                     self.sendUserNotification(identifier: "python_app_started_\(UUID().uuidString)",
+                                                title: "Python Uygulaması Başlatıldı",
+                                                body: "\((finalScriptPath as NSString).lastPathComponent) çalıştırıldı (PID: \(process.processIdentifier)).")
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    print("❌ Python betiği çalıştırılırken hata oluştu: \(error)")
+                    self.showErrorAlert(message: "Python betiği '\(finalScriptPath)' çalıştırılırken bir hata oluştu:\n\(error.localizedDescription)")
+                    self.pythonAppProcess = nil
+                    self.constructMenu()
+                }
+            }
+        }
+    }
+    // --- BİTİŞ: Python Uygulamasını Başlatma Eylemi (Venv için Güncellenmiş) ---
 
     // MARK: - User Notifications (Sending & Receiving System Notifications)
     func requestNotificationAuthorization() {
@@ -199,6 +303,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     
  
     // --- END NEW ACTIONS ---
+    
+    // --- YENİ: Python Uygulamasını Durdurma Eylemi ---
+    @objc func stopPythonAppAction() {
+        guard let process = pythonAppProcess, process.isRunning else {
+            print("ℹ️ Durdurulacak çalışan Python betiği bulunamadı.")
+            // Eğer referans kalmış ama işlem çalışmıyorsa temizle ve menüyü güncelle
+            if pythonAppProcess != nil && !pythonAppProcess!.isRunning {
+                 DispatchQueue.main.async {
+                     self.pythonAppProcess = nil
+                     self.constructMenu()
+                 }
+            }
+            return
+        }
+
+        print("🛑 Python betiği durduruluyor (PID: \(process.processIdentifier))...")
+        process.terminate() // SIGTERM gönderir
+
+        // Termination handler zaten pythonAppProcess'i nil yapacak ve menüyü güncelleyecek.
+        // İsteğe bağlı olarak burada hemen bir bildirim gönderebiliriz:
+        DispatchQueue.main.async {
+             self.sendUserNotification(identifier: "python_app_stopping_\(UUID().uuidString)",
+                                        title: "Python Uygulaması Durduruluyor",
+                                        body: "\((self.pythonScriptPath as NSString).lastPathComponent) için durdurma sinyali gönderildi.")
+             // İsteğe bağlı: Kullanıcıya daha hızlı geri bildirim için menüyü hemen güncelleyebiliriz,
+             // ancak termination handler'ın çalışmasını beklemek durumu daha doğru yansıtır.
+             // self.constructMenu() // İsterseniz bu satırı açabilirsiniz.
+        }
+    }
+    // --- BİTİŞ: Python Uygulamasını Durdurma Eylemi ---
 
     // MARK: - Menu Construction
     @objc func constructMenu() {
@@ -369,6 +503,53 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         menu.addItem(stopMampItem)
         menu.addItem(NSMenuItem.separator())
         // --- [END NEW] MAMP Server Control Section ---
+        
+        // --- BAŞLANGIÇ: Python Uygulaması Başlatma/Durdurma Bölümü (Venv için Güncellenmiş) ---
+        menu.addItem(withTitle: "Python Panel", action: nil, keyEquivalent: "").isEnabled = false
+
+        // Hesaplamaları burada da yap (kod tekrarı olsa da constructMenu'nun bağımsız çalışması için gerekli)
+        let expandedProjectDirPath = (pythonProjectDirectoryPath as NSString).expandingTildeInPath
+        let venvPath = expandedProjectDirPath.appending("/").appending(pythonVenvName)
+        let venvInterpreterPath = venvPath.appending("/bin/python")
+        let finalScriptPath: String // Betik yolunu belirle
+        if pythonScriptPath.contains("/") { finalScriptPath = (pythonScriptPath as NSString).expandingTildeInPath }
+        else { finalScriptPath = expandedProjectDirPath.appending("/").appending(pythonScriptPath) }
+
+        let scriptExists = FileManager.default.fileExists(atPath: finalScriptPath)
+        let venvInterpreterExists = FileManager.default.isExecutableFile(atPath: venvInterpreterPath)
+        let canAttemptStart = scriptExists && (venvInterpreterExists || FileManager.default.fileExists(atPath: "/usr/bin/env")) // Venv veya fallback varsa başlatmayı dene
+        let isPythonRunning = pythonAppProcess != nil && pythonAppProcess!.isRunning
+
+        // Başlat Öğesi
+        let pythonAppItem = NSMenuItem(title: "Python Uygulamasını Başlat", action: #selector(startPythonAppAction), keyEquivalent: "")
+        pythonAppItem.target = self
+        pythonAppItem.isEnabled = canAttemptStart && !isPythonRunning // Sadece başlatma mümkünse VE çalışmıyorsa etkin
+
+        // Tooltip'i güncelle
+        if !scriptExists {
+             pythonAppItem.toolTip = "Python betiği bulunamadı: \(finalScriptPath)"
+        } else if isPythonRunning {
+             pythonAppItem.toolTip = "Uygulama zaten çalışıyor (PID: \(pythonAppProcess?.processIdentifier ?? 0))."
+        } else if !venvInterpreterExists {
+             pythonAppItem.toolTip = "Venv yorumlayıcısı bulunamadı (\(venvInterpreterPath)). Sistemdeki python3 ile başlatmayı deneyecek."
+        } else { // Hem betik var, hem venv var, hem de çalışmıyor
+             pythonAppItem.toolTip = "Şu betiği venv ile çalıştırır: \(finalScriptPath)"
+        }
+        menu.addItem(pythonAppItem)
+
+        // Durdur Öğesi (Aynı kalır)
+        let stopPythonItem = NSMenuItem(title: "Python Uygulamasını Durdur", action: #selector(stopPythonAppAction), keyEquivalent: "")
+        stopPythonItem.target = self
+        stopPythonItem.isEnabled = isPythonRunning
+        if isPythonRunning {
+             stopPythonItem.toolTip = "Çalışan uygulamayı (PID: \(pythonAppProcess!.processIdentifier)) durdurur."
+        } else {
+             stopPythonItem.toolTip = "Çalışan Python uygulaması yok."
+        }
+        menu.addItem(stopPythonItem)
+        menu.addItem(NSMenuItem.separator())
+        // --- BİTİŞ: Python Uygulaması Başlatma/Durdurma Bölümü (Venv için Güncellenmiş) ---
+
 
 
         // --- Refresh, PDF Guide, Settings, Quit ---
