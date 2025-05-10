@@ -31,73 +31,170 @@ struct CreateManagedTunnelView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Yeni Yönetilen Tünel Oluştur").font(.title2).padding(.bottom, 10)
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Yeni Yönetilen Tünel Oluştur")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            .padding(.bottom, 8)
 
-            // Input Fields
-            Group {
-                HStack { Text("Tünel Adı:").frame(width: 100, alignment: .trailing); TextField("Cloudflare'deki Ad (boşluksuz)", text: $tunnelName).onChange(of: tunnelName) { syncConfigName() } }
-                HStack { Text("Config Adı:").frame(width: 100, alignment: .trailing); TextField("Yerel .yml Dosya Adı (örn: site-config)", text: $configName) }
-                HStack { Text("Hostname:").frame(width: 100, alignment: .trailing); TextField("Erişilecek Alan Adı (örn: site.alanadiniz.com)", text: $hostname) }
-                HStack {
-                    Text("Yerel Port:").frame(width: 100, alignment: .trailing)
-                    TextField("Port", text: $portString)
-                        .frame(maxWidth: 100)
-                        .onChange(of: portString) { newValue in
-                            let filtered = newValue.filter { "0123456789".contains($0) }
-                            let clamped = String(filtered.prefix(5))
-                            if clamped != newValue {
-                                 DispatchQueue.main.async { portString = clamped } // Ensure update on main
-                            }
+            // Main Content
+            VStack(spacing: 16) {
+                // Tunnel Details Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Tünel Detayları")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    VStack(spacing: 8) {
+                        FormField(label: "Tünel Adı", text: $tunnelName, placeholder: "Cloudflare'deki Ad (boşluksuz)")
+                            .onChange(of: tunnelName) { syncConfigName() }
+                        
+                        FormField(label: "Config Adı", text: $configName, placeholder: "Yerel .yml Dosya Adı")
+                        
+                        FormField(label: "Hostname", text: $hostname, placeholder: "Erişilecek Alan Adı")
+                        
+                        HStack {
+                            Text("Yerel Port")
+                                .frame(width: 100, alignment: .trailing)
+                            TextField("Port", text: $portString)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: portString) { newValue in
+                                    let filtered = newValue.filter { "0123456789".contains($0) }
+                                    let clamped = String(filtered.prefix(5))
+                                    if clamped != newValue {
+                                        DispatchQueue.main.async { portString = clamped }
+                                    }
+                                }
                         }
+                    }
+                    .padding(.horizontal)
+                }
+
+                Divider()
+                    .padding(.horizontal)
+
+                // MAMP Integration Section
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "link.circle.fill")
+                            .foregroundColor(.blue)
+                        Text("MAMP Entegrasyonu")
+                            .font(.headline)
+                    }
+                    .padding(.horizontal)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Proje Kökü")
+                                .frame(width: 100, alignment: .trailing)
+                            TextField("MAMP site klasörü", text: $documentRoot)
+                                .textFieldStyle(.roundedBorder)
+                            Button(action: browseForDocumentRoot) {
+                                Image(systemName: "folder")
+                                    .frame(width: 24, height: 24)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Proje kök dizinini seç")
+                        }
+
+                        Toggle("MAMP Apache vHost Dosyasını Güncelle", isOn: $updateVHost)
+                            .padding(.leading, 105)
+                            .disabled(documentRoot.isEmpty || !FileManager.default.fileExists(atPath: documentRoot))
+
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundColor(.blue)
+                                .font(.caption)
+                            Text("Proje kökü geçerliyse ve seçilirse, httpd-vhosts.conf dosyasına giriş eklemeyi dener. MAMP'ın yeniden başlatılması gerekir.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.leading, 105)
+                    }
+                    .padding(.horizontal)
                 }
             }
-
-            Divider()
-            Text("MAMP Entegrasyonu (Opsiyonel)").font(.headline)
-
-            // MAMP Section
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Proje Kökü:").frame(width: 100, alignment: .trailing)
-                    TextField("MAMP site klasörü (örn: /Applications/MAMP/htdocs/projem)", text: $documentRoot)
-                    Button("Gözat...") { browseForDocumentRoot() }
-                }
-                Toggle("MAMP Apache vHost Dosyasını Güncelle", isOn: $updateVHost)
-                    .padding(.leading, 105)
-                    .disabled(documentRoot.isEmpty || !FileManager.default.fileExists(atPath: documentRoot))
-                Text("Proje kökü geçerliyse ve seçilirse, httpd-vhosts.conf dosyasına giriş eklemeyi dener. MAMP'ın yeniden başlatılması gerekir.")
-                    .font(.caption).foregroundColor(.gray).padding(.leading, 105)
-            }
-
-            Spacer() // Push buttons down
+            .padding(.vertical, 8)
 
             // Status/Progress Area
             if isCreating {
                 HStack {
-                    ProgressView().scaleEffect(0.8)
-                    Text(creationStatus).font(.callout).foregroundColor(.gray).lineLimit(2)
-                }.padding(.bottom, 5)
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text(creationStatus)
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+                .padding(8)
+                .background(Color(.windowBackgroundColor))
+                .cornerRadius(8)
+                .padding(.horizontal)
             }
+
+            Divider()
 
             // Action Buttons
             HStack {
-                Button("İptal") { if !isCreating { dismiss() } }
-                    .keyboardShortcut(.cancelAction)
+                Button("İptal") {
+                    if !isCreating { dismiss() }
+                }
+                .keyboardShortcut(.cancelAction)
+                
                 Spacer()
-                Button("Oluştur") { startCreationProcess() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(isCreating || !isFormValid)
+                
+                Button(action: startCreationProcess) {
+                    HStack {
+                        if isCreating {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                        Text("Oluştur")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isCreating || !isFormValid)
+                .keyboardShortcut(.defaultAction)
             }
-            .padding(.top)
+            .padding()
         }
-        .padding()
-        .frame(minWidth: 500, idealWidth: 550, minHeight: 400, idealHeight: 450) // Adjusted height
+        .frame(width: 500, height: 400)
         .onAppear {
             portString = "\(tunnelManager.defaultMampPort)" // Set default MAMP port
         }
-        .alert("Hata", isPresented: $showErrorAlert, actions: { Button("Tamam") { } }, message: { Text(errorMessage) })
-        .alert("Başarılı", isPresented: $showSuccessAlert, actions: { Button("Harika!") { dismiss() } }, message: { Text(successMessage) })
+        .alert("Hata", isPresented: $showErrorAlert) {
+            Button("Tamam") { }
+        } message: {
+            Text(errorMessage)
+        }
+        .alert("Başarılı", isPresented: $showSuccessAlert) {
+            Button("Harika!") { dismiss() }
+        } message: {
+            Text(successMessage)
+        }
+    }
+
+    // Helper Views
+    private struct FormField: View {
+        let label: String
+        @Binding var text: String
+        let placeholder: String
+        
+        var body: some View {
+            HStack {
+                Text(label)
+                    .frame(width: 100, alignment: .trailing)
+                TextField(placeholder, text: $text)
+                    .textFieldStyle(.roundedBorder)
+            }
+        }
     }
 
     // Sync config name with tunnel name initially
@@ -164,3 +261,4 @@ struct CreateManagedTunnelView: View {
         }
     }
 }
+

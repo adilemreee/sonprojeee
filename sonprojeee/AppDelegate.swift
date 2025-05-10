@@ -354,11 +354,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             item.target = self
             item.toolTip = "Lütfen Ayarlar'dan cloudflared yolunu düzeltin."
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.foregroundColor: NSColor.systemRed])
+            item.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Cloudflared Not Found")
             menu.addItem(item)
             menu.addItem(NSMenuItem.separator())
         } else {
             let loginItem = NSMenuItem(title: "Cloudflare Girişi Yap / Kontrol Et...", action: #selector(cloudflareLoginAction), keyEquivalent: "")
             loginItem.target = self
+            loginItem.image = NSImage(systemSymbolName: "person.crop.circle.badge.checkmark", accessibilityDescription: "Cloudflare Login")
             menu.addItem(loginItem)
             menu.addItem(NSMenuItem.separator())
         }
@@ -366,30 +368,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // --- Quick Tunnels Section ---
         let quickTunnels = tunnelManager.quickTunnels
         if !quickTunnels.isEmpty {
-            menu.addItem(withTitle: "Hızlı Tüneller", action: nil, keyEquivalent: "").isEnabled = false
+            let quickTunnelsHeader = NSMenuItem(title: "Hızlı Tüneller", action: nil, keyEquivalent: "")
+            quickTunnelsHeader.isEnabled = false
+            quickTunnelsHeader.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "Quick Tunnels")
+            menu.addItem(quickTunnelsHeader)
+            
             for quickTunnelData in quickTunnels {
                 let displayTitle: String
                 var toolTip = "Yerel: \(quickTunnelData.localURL)"
                 if let url = quickTunnelData.publicURL {
-                    displayTitle = "🔗 \(url.replacingOccurrences(of: "https://", with: ""))"
+                    displayTitle = url.replacingOccurrences(of: "https://", with: "")
                     toolTip += "\nGenel: \(url)\n(Kopyalamak için tıkla)"
                 } else if let error = quickTunnelData.lastError {
-                    displayTitle = "❗️ \(quickTunnelData.localURL) (Hata)"
+                    displayTitle = "\(quickTunnelData.localURL) (Hata)"
                     toolTip += "\nHata: \(error)"
                 } else {
-                    displayTitle = "⏳ \(quickTunnelData.localURL) (Başlatılıyor/Bekleniyor...)"
+                    displayTitle = "\(quickTunnelData.localURL) (Başlatılıyor/Bekleniyor...)"
                     toolTip += "\n(URL bekleniyor...)"
                 }
                 if let pid = quickTunnelData.processIdentifier { toolTip += "\nPID: \(pid)" }
+                
                 let quickItem = NSMenuItem(title: displayTitle, action: #selector(copyQuickTunnelURLAction(_:)), keyEquivalent: "")
                 quickItem.target = self
                 quickItem.representedObject = quickTunnelData
                 quickItem.toolTip = toolTip
                 quickItem.isEnabled = (quickTunnelData.publicURL != nil)
+                quickItem.image = NSImage(systemSymbolName: "link.circle", accessibilityDescription: "Quick Tunnel")
+                
                 let subMenu = NSMenu()
                 let stopQuickItem = NSMenuItem(title: "Bu Hızlı Tüneli Durdur", action: #selector(stopQuickTunnelAction(_:)), keyEquivalent: "")
                 stopQuickItem.target = self
                 stopQuickItem.representedObject = quickTunnelData.id
+                stopQuickItem.image = NSImage(systemSymbolName: "stop.circle", accessibilityDescription: "Stop Quick Tunnel")
                 subMenu.addItem(stopQuickItem)
                 quickItem.submenu = subMenu
                 menu.addItem(quickItem)
@@ -400,43 +410,92 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // --- Managed Tunnels Section ---
         let managedTunnels = tunnelManager.tunnels
         if !managedTunnels.isEmpty {
-            menu.addItem(withTitle: "Yönetilen Tüneller (Config ile)", action: nil, keyEquivalent: "").isEnabled = false
+            let managedTunnelsHeader = NSMenuItem(title: "Yönetilen Tüneller (Config ile)", action: nil, keyEquivalent: "")
+            managedTunnelsHeader.isEnabled = false
+            managedTunnelsHeader.image = NSImage(systemSymbolName: "network", accessibilityDescription: "Managed Tunnels")
+            menu.addItem(managedTunnelsHeader)
+            
             for tunnel in managedTunnels {
-                let icon: String; let titleText: String
+                let titleText: String
+                let statusIcon: String
+                
                 switch tunnel.status {
-                case .running: icon = "🟢"; titleText = "\(icon) \(tunnel.name)"
-                case .stopped: icon = "🔴"; titleText = "\(icon) \(tunnel.name)"
-                case .starting: icon = "🟡"; titleText = "\(icon) \(tunnel.name) (Başlatılıyor...)"
-                case .stopping: icon = "🟠"; titleText = "\(icon) \(tunnel.name) (Durduruluyor...)"
-                case .error: icon = "❗️"; titleText = "\(icon) \(tunnel.name) (Hata)"
+                case .running:
+                    statusIcon = "checkmark.circle.fill"
+                    titleText = tunnel.name
+                case .stopped:
+                    statusIcon = "stop.circle.fill"
+                    titleText = tunnel.name
+                case .starting:
+                    statusIcon = "arrow.clockwise.circle"
+                    titleText = "\(tunnel.name) (Başlatılıyor...)"
+                case .stopping:
+                    statusIcon = "stop.circle"
+                    titleText = "\(tunnel.name) (Durduruluyor...)"
+                case .error:
+                    statusIcon = "exclamationmark.circle.fill"
+                    titleText = "\(tunnel.name) (Hata)"
                 }
+                
                 let mainMenuItem = NSMenuItem(title: titleText, action: nil, keyEquivalent: "")
+                mainMenuItem.image = NSImage(systemSymbolName: statusIcon, accessibilityDescription: "Tunnel Status")
+                
                 var toolTipParts: [String] = ["Durum: \(tunnel.status.displayName)"]
                 if let uuid = tunnel.uuidFromConfig { toolTipParts.append("UUID: \(uuid)")} else { toolTipParts.append("UUID: (Config'den okunamadı)")}
                 if let path = tunnel.configPath { toolTipParts.append("Config: \((path as NSString).abbreviatingWithTildeInPath)") }
                 if let pid = tunnel.processIdentifier { toolTipParts.append("PID: \(pid)") }
                 if let err = tunnel.lastError, !err.isEmpty { toolTipParts.append("Son Hata: \(err.split(separator: "\n").first ?? "")") }
                 mainMenuItem.toolTip = toolTipParts.joined(separator: "\n")
+                
                 let subMenu = NSMenu()
                 let canToggle = tunnel.isManaged && tunnel.status != .starting && tunnel.status != .stopping && isCloudflaredAvailable
                 let toggleTitle = (tunnel.status == .running) ? "Durdur" : "Başlat"
-                let toggleItem = NSMenuItem(title: toggleTitle, action: #selector(toggleManagedTunnelAction(_:)), keyEquivalent: ""); toggleItem.target = self; toggleItem.representedObject = tunnel; toggleItem.isEnabled = canToggle; subMenu.addItem(toggleItem)
+                let toggleItem = NSMenuItem(title: toggleTitle, action: #selector(toggleManagedTunnelAction(_:)), keyEquivalent: "")
+                toggleItem.target = self
+                toggleItem.representedObject = tunnel
+                toggleItem.isEnabled = canToggle
+                toggleItem.image = NSImage(systemSymbolName: tunnel.status == .running ? "stop.circle" : "play.circle", accessibilityDescription: toggleTitle)
+                subMenu.addItem(toggleItem)
                 subMenu.addItem(NSMenuItem.separator())
+                
                 let canOpenConfig = tunnel.configPath != nil && FileManager.default.fileExists(atPath: tunnel.configPath!)
-                let openConfigItem = NSMenuItem(title: "Config Dosyasını Aç (.yml)", action: #selector(openConfigFileAction(_:)), keyEquivalent: ""); openConfigItem.target = self; openConfigItem.representedObject = tunnel; openConfigItem.isEnabled = canOpenConfig; subMenu.addItem(openConfigItem)
+                let openConfigItem = NSMenuItem(title: "Config Dosyasını Aç (.yml)", action: #selector(openConfigFileAction(_:)), keyEquivalent: "")
+                openConfigItem.target = self
+                openConfigItem.representedObject = tunnel
+                openConfigItem.isEnabled = canOpenConfig
+                openConfigItem.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: "Open Config")
+                subMenu.addItem(openConfigItem)
+                
                 let canRouteDns = tunnel.isManaged && isCloudflaredAvailable
-                let routeDnsItem = NSMenuItem(title: "DNS Kaydı Yönlendir...", action: #selector(routeDnsForTunnelAction(_:)), keyEquivalent: ""); routeDnsItem.target = self; routeDnsItem.representedObject = tunnel; routeDnsItem.isEnabled = canRouteDns; subMenu.addItem(routeDnsItem)
+                let routeDnsItem = NSMenuItem(title: "DNS Kaydı Yönlendir...", action: #selector(routeDnsForTunnelAction(_:)), keyEquivalent: "")
+                routeDnsItem.target = self
+                routeDnsItem.representedObject = tunnel
+                routeDnsItem.isEnabled = canRouteDns
+                routeDnsItem.image = NSImage(systemSymbolName: "arrow.triangle.branch", accessibilityDescription: "Route DNS")
+                subMenu.addItem(routeDnsItem)
                 subMenu.addItem(NSMenuItem.separator())
+                
                 let canDelete = tunnel.isManaged && tunnel.status != .stopping && tunnel.status != .starting && isCloudflaredAvailable
-                let deleteItem = NSMenuItem(title: "Bu Tüneli Sil...", action: #selector(deleteTunnelAction(_:)), keyEquivalent: ""); deleteItem.target = self; deleteItem.representedObject = tunnel; deleteItem.isEnabled = canDelete; deleteItem.toolTip = "Cloudflare'dan tüneli ve isteğe bağlı yerel dosyaları siler. DİKKAT! Geri Alınamaz."
-                deleteItem.attributedTitle = NSAttributedString(string: deleteItem.title, attributes: [.foregroundColor: NSColor.systemRed]); subMenu.addItem(deleteItem)
-                mainMenuItem.submenu = subMenu; menu.addItem(mainMenuItem)
+                let deleteItem = NSMenuItem(title: "Bu Tüneli Sil...", action: #selector(deleteTunnelAction(_:)), keyEquivalent: "")
+                deleteItem.target = self
+                deleteItem.representedObject = tunnel
+                deleteItem.isEnabled = canDelete
+                deleteItem.toolTip = "Cloudflare'dan tüneli ve isteğe bağlı yerel dosyaları siler. DİKKAT! Geri Alınamaz."
+                deleteItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: "Delete Tunnel")
+                deleteItem.attributedTitle = NSAttributedString(string: deleteItem.title, attributes: [.foregroundColor: NSColor.systemRed])
+                subMenu.addItem(deleteItem)
+                
+                mainMenuItem.submenu = subMenu
+                menu.addItem(mainMenuItem)
             }
         }
 
         // --- Placeholder or Separator ---
         if managedTunnels.isEmpty && quickTunnels.isEmpty && isCloudflaredAvailable {
-            menu.addItem(withTitle: "Tünel bulunamadı", action: nil, keyEquivalent: "").isEnabled = false
+            let noTunnelsItem = NSMenuItem(title: "Tünel bulunamadı", action: nil, keyEquivalent: "")
+            noTunnelsItem.isEnabled = false
+            noTunnelsItem.image = NSImage(systemSymbolName: "network.slash", accessibilityDescription: "No Tunnels")
+            menu.addItem(noTunnelsItem)
         }
         if !managedTunnels.isEmpty || !quickTunnels.isEmpty {
             menu.addItem(NSMenuItem.separator())
@@ -444,133 +503,179 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // --- Bulk Actions ---
         let canStartAnyManaged = isCloudflaredAvailable && managedTunnels.contains { $0.isManaged && ($0.status == .stopped || $0.status == .error) }
-        let startAllItem = NSMenuItem(title: "Tüm Yönetilenleri Başlat", action: #selector(startAllManagedTunnelsAction), keyEquivalent: ""); startAllItem.target = self; startAllItem.isEnabled = canStartAnyManaged; menu.addItem(startAllItem)
+        let startAllItem = NSMenuItem(title: "Tüm Yönetilenleri Başlat", action: #selector(startAllManagedTunnelsAction), keyEquivalent: "")
+        startAllItem.target = self
+        startAllItem.isEnabled = canStartAnyManaged
+        startAllItem.image = NSImage(systemSymbolName: "play.circle.fill", accessibilityDescription: "Start All Managed")
+        menu.addItem(startAllItem)
+
         let canStopAny = isCloudflaredAvailable && (managedTunnels.contains { $0.isManaged && [.running, .stopping, .starting].contains($0.status) } || !quickTunnels.isEmpty)
-        let stopAllItem = NSMenuItem(title: "Tüm Tünelleri Durdur", action: #selector(stopAllTunnelsAction), keyEquivalent: ""); stopAllItem.target = self; stopAllItem.isEnabled = canStopAny; menu.addItem(stopAllItem)
+        let stopAllItem = NSMenuItem(title: "Tüm Tünelleri Durdur", action: #selector(stopAllTunnelsAction), keyEquivalent: "")
+        stopAllItem.target = self
+        stopAllItem.isEnabled = canStopAny
+        stopAllItem.image = NSImage(systemSymbolName: "stop.circle.fill", accessibilityDescription: "Stop All Tunnels")
+        menu.addItem(stopAllItem)
         menu.addItem(NSMenuItem.separator())
 
         // --- Create Actions ---
-        menu.addItem(withTitle: "Oluştur / Başlat", action: nil, keyEquivalent: "").isEnabled = false
-        //let quickTunnelItem = NSMenuItem(title: "Hızlı Tünel Başlat...", action: #selector(startQuickTunnelAction(_:)), keyEquivalent: "") // Commented out or remove if not needed
-        //quickTunnelItem.target = self; quickTunnelItem.isEnabled = isCloudflaredAvailable; menu.addItem(quickTunnelItem)
-        let createManagedItem = NSMenuItem(title: "Yeni Yönetilen Tünel (Config ile)...", action: #selector(openCreateManagedTunnelWindow), keyEquivalent: "n"); createManagedItem.target = self; createManagedItem.isEnabled = isCloudflaredAvailable; menu.addItem(createManagedItem)
-        let mampIntegrationPossible = isCloudflaredAvailable && FileManager.default.fileExists(atPath: tunnelManager.mampSitesDirectoryPath)
+        let createMenu = NSMenu()
+        let createManagedItem = NSMenuItem(title: "Yeni Yönetilen Tünel (Config ile)...", action: #selector(openCreateManagedTunnelWindow), keyEquivalent: "n")
+        createManagedItem.target = self
+        createManagedItem.isEnabled = isCloudflaredAvailable
+        createManagedItem.image = NSImage(systemSymbolName: "doc.badge.plus", accessibilityDescription: "New Managed Tunnel")
+        createMenu.addItem(createManagedItem)
+
         let createMampItem = NSMenuItem(title: "MAMP Sitesinden Oluştur...", action: #selector(openCreateFromMampWindow), keyEquivalent: "")
-        createMampItem.target = self; createMampItem.isEnabled = mampIntegrationPossible;
-        if !mampIntegrationPossible && isCloudflaredAvailable { createMampItem.toolTip = "MAMP site dizini bulunamadı: \(tunnelManager.mampSitesDirectoryPath)" }
-        menu.addItem(createMampItem)
+        createMampItem.target = self
+        createMampItem.isEnabled = isCloudflaredAvailable && FileManager.default.fileExists(atPath: tunnelManager.mampSitesDirectoryPath)
+        createMampItem.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "Create from MAMP")
+        if !FileManager.default.fileExists(atPath: tunnelManager.mampSitesDirectoryPath) && isCloudflaredAvailable {
+            createMampItem.toolTip = "MAMP site dizini bulunamadı: \(tunnelManager.mampSitesDirectoryPath)"
+        }
+        createMenu.addItem(createMampItem)
+
+        let createMenuItem = NSMenuItem(title: "Oluştur / Başlat", action: nil, keyEquivalent: "")
+        createMenuItem.submenu = createMenu
+        createMenuItem.image = NSImage(systemSymbolName: "plus.circle", accessibilityDescription: "Create/Start")
+        menu.addItem(createMenuItem)
         menu.addItem(NSMenuItem.separator())
 
         // --- Folder Management ---
-        menu.addItem(withTitle: "Klasör Yönetim", action: nil, keyEquivalent: "").isEnabled = false
-        let openCloudflaredItem = NSMenuItem(title: "~/.cloudflared Klasörünü Aç", action: #selector(openCloudflaredFolderAction), keyEquivalent: ""); openCloudflaredItem.target = self; openCloudflaredItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.cloudflaredDirectoryPath); menu.addItem(openCloudflaredItem)
-        let openMampConfigItem = NSMenuItem(title: "MAMP Apache Conf Klasörünü Aç", action: #selector(openMampConfigFolderAction), keyEquivalent: ""); openMampConfigItem.target = self; openMampConfigItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampConfigDirectoryPath); menu.addItem(openMampConfigItem)
+        let folderMenu = NSMenu()
+        let openCloudflaredItem = NSMenuItem(title: "~/.cloudflared Klasörünü Aç", action: #selector(openCloudflaredFolderAction), keyEquivalent: "")
+        openCloudflaredItem.target = self
+        openCloudflaredItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.cloudflaredDirectoryPath)
+        openCloudflaredItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: "Open Cloudflared Folder")
+        folderMenu.addItem(openCloudflaredItem)
+
+        let openMampConfigItem = NSMenuItem(title: "MAMP Apache Conf Klasörünü Aç", action: #selector(openMampConfigFolderAction), keyEquivalent: "")
+        openMampConfigItem.target = self
+        openMampConfigItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampConfigDirectoryPath)
+        openMampConfigItem.image = NSImage(systemSymbolName: "folder.badge.gearshape", accessibilityDescription: "Open MAMP Config Folder")
+        folderMenu.addItem(openMampConfigItem)
+
+        let folderMenuItem = NSMenuItem(title: "Klasör Yönetim", action: nil, keyEquivalent: "")
+        folderMenuItem.submenu = folderMenu
+        folderMenuItem.image = NSImage(systemSymbolName: "folder.badge.plus", accessibilityDescription: "Folder Management")
+        menu.addItem(folderMenuItem)
         menu.addItem(NSMenuItem.separator())
-        
-        menu.addItem(withTitle: "Dosya Yönetim", action: nil, keyEquivalent: "").isEnabled = false
-        // --- ADD NEW FILE OPENING ITEMS ---
+
+        // --- File Management ---
+        let fileMenu = NSMenu()
         let openVHostFileItem = NSMenuItem(title: "Dosyasını Aç (httpd-vhosts.conf)", action: #selector(openMampVHostFileAction), keyEquivalent: "")
         openVHostFileItem.target = self
         openVHostFileItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampVHostConfPath)
+        openVHostFileItem.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: "Open vHost File")
         openVHostFileItem.toolTip = "MAMP'ın sanal konak yapılandırma dosyasını açar."
-        menu.addItem(openVHostFileItem)
+        fileMenu.addItem(openVHostFileItem)
 
         let openHttpdFileItem = NSMenuItem(title: "Dosyasını Aç (httpd.conf)", action: #selector(openMampHttpdConfFileAction), keyEquivalent: "")
         openHttpdFileItem.target = self
         openHttpdFileItem.isEnabled = FileManager.default.fileExists(atPath: tunnelManager.mampHttpdConfPath)
+        openHttpdFileItem.image = NSImage(systemSymbolName: "doc.text.fill", accessibilityDescription: "Open httpd.conf File")
         openHttpdFileItem.toolTip = "MAMP'ın ana Apache yapılandırma dosyasını açar."
-        menu.addItem(openHttpdFileItem)
-        // --- END NEW FILE OPENING ITEMS ---
-        menu.addItem(NSMenuItem.separator())
-        
-        // --- [NEW] MAMP Server Control Section ---
-        menu.addItem(withTitle: "MAMP Yönetimi", action: nil, keyEquivalent: "").isEnabled = false
-        // Check if MAMP scripts exist and are executable
-        let startScriptPath = "\(mampBasePath)/\(mampStartScript)"
-        let stopScriptPath = "\(mampBasePath)/\(mampStopScript)"
-        let canControlMamp = FileManager.default.isExecutableFile(atPath: startScriptPath) && FileManager.default.isExecutableFile(atPath: stopScriptPath)
+        fileMenu.addItem(openHttpdFileItem)
 
+        let fileMenuItem = NSMenuItem(title: "Dosya Yönetim", action: nil, keyEquivalent: "")
+        fileMenuItem.submenu = fileMenu
+        fileMenuItem.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: "File Management")
+        menu.addItem(fileMenuItem)
+        menu.addItem(NSMenuItem.separator())
+
+        // --- MAMP Server Control Section ---
+        let mampMenu = NSMenu()
         let startMampItem = NSMenuItem(title: "MAMP Sunucularını Başlat", action: #selector(startMampServersAction), keyEquivalent: "")
         startMampItem.target = self
-        startMampItem.isEnabled = canControlMamp // Enable only if scripts are found
-        if !canControlMamp { startMampItem.toolTip = "MAMP başlatma/durdurma betikleri bulunamadı.\nYol: \(mampBasePath)" }
-        menu.addItem(startMampItem)
+        startMampItem.isEnabled = isCloudflaredAvailable && FileManager.default.isExecutableFile(atPath: "\(mampBasePath)/\(mampStartScript)") && FileManager.default.isExecutableFile(atPath: "\(mampBasePath)/\(mampStopScript)")
+        startMampItem.image = NSImage(systemSymbolName: "play.circle", accessibilityDescription: "Start MAMP Servers")
+        if !startMampItem.isEnabled {
+            startMampItem.toolTip = "MAMP başlatma/durdurma betikleri bulunamadı.\nYol: \(mampBasePath)"
+        }
+        mampMenu.addItem(startMampItem)
 
         let stopMampItem = NSMenuItem(title: "MAMP Sunucularını Durdur", action: #selector(stopMampServersAction), keyEquivalent: "")
         stopMampItem.target = self
-        stopMampItem.isEnabled = canControlMamp // Enable only if scripts are found
-        if !canControlMamp { stopMampItem.toolTip = "MAMP başlatma/durdurma betikleri bulunamadı.\nYol: \(mampBasePath)" }
-        menu.addItem(stopMampItem)
+        stopMampItem.isEnabled = isCloudflaredAvailable && FileManager.default.isExecutableFile(atPath: "\(mampBasePath)/\(mampStartScript)") && FileManager.default.isExecutableFile(atPath: "\(mampBasePath)/\(mampStopScript)")
+        stopMampItem.image = NSImage(systemSymbolName: "stop.circle", accessibilityDescription: "Stop MAMP Servers")
+        if !stopMampItem.isEnabled {
+            stopMampItem.toolTip = "MAMP başlatma/durdurma betikleri bulunamadı.\nYol: \(mampBasePath)"
+        }
+        mampMenu.addItem(stopMampItem)
+
+        let mampMenuItem = NSMenuItem(title: "MAMP Yönetimi", action: nil, keyEquivalent: "")
+        mampMenuItem.submenu = mampMenu
+        mampMenuItem.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "MAMP Management")
+        menu.addItem(mampMenuItem)
         menu.addItem(NSMenuItem.separator())
-        // --- [END NEW] MAMP Server Control Section ---
-        
-        // --- BAŞLANGIÇ: Python Uygulaması Başlatma/Durdurma Bölümü (Venv için Güncellenmiş) ---
-        menu.addItem(withTitle: "Python Panel", action: nil, keyEquivalent: "").isEnabled = false
 
-        // Hesaplamaları burada da yap (kod tekrarı olsa da constructMenu'nun bağımsız çalışması için gerekli)
-        let expandedProjectDirPath = (pythonProjectDirectoryPath as NSString).expandingTildeInPath
-        let venvPath = expandedProjectDirPath.appending("/").appending(pythonVenvName)
-        let venvInterpreterPath = venvPath.appending("/bin/python")
-        let finalScriptPath: String // Betik yolunu belirle
-        if pythonScriptPath.contains("/") { finalScriptPath = (pythonScriptPath as NSString).expandingTildeInPath }
-        else { finalScriptPath = expandedProjectDirPath.appending("/").appending(pythonScriptPath) }
-
-        let scriptExists = FileManager.default.fileExists(atPath: finalScriptPath)
-        let venvInterpreterExists = FileManager.default.isExecutableFile(atPath: venvInterpreterPath)
-        let canAttemptStart = scriptExists && (venvInterpreterExists || FileManager.default.fileExists(atPath: "/usr/bin/env")) // Venv veya fallback varsa başlatmayı dene
-        let isPythonRunning = pythonAppProcess != nil && pythonAppProcess!.isRunning
-
-        // Başlat Öğesi
+        // --- Python Panel Section ---
+        let pythonMenu = NSMenu()
         let pythonAppItem = NSMenuItem(title: "Python Uygulamasını Başlat", action: #selector(startPythonAppAction), keyEquivalent: "")
         pythonAppItem.target = self
-        pythonAppItem.isEnabled = canAttemptStart && !isPythonRunning // Sadece başlatma mümkünse VE çalışmıyorsa etkin
-
-        // Tooltip'i güncelle
-        if !scriptExists {
-             pythonAppItem.toolTip = "Python betiği bulunamadı: \(finalScriptPath)"
-        } else if isPythonRunning {
-             pythonAppItem.toolTip = "Uygulama zaten çalışıyor (PID: \(pythonAppProcess?.processIdentifier ?? 0))."
-        } else if !venvInterpreterExists {
-             pythonAppItem.toolTip = "Venv yorumlayıcısı bulunamadı (\(venvInterpreterPath)). Sistemdeki python3 ile başlatmayı deneyecek."
-        } else { // Hem betik var, hem venv var, hem de çalışmıyor
-             pythonAppItem.toolTip = "Şu betiği venv ile çalıştırır: \(finalScriptPath)"
+        pythonAppItem.isEnabled = isCloudflaredAvailable && FileManager.default.fileExists(atPath: pythonScriptPath) && (pythonAppProcess == nil || !pythonAppProcess!.isRunning)
+        pythonAppItem.image = NSImage(systemSymbolName: "play.circle.fill", accessibilityDescription: "Start Python App")
+        if !FileManager.default.fileExists(atPath: pythonScriptPath) {
+            pythonAppItem.toolTip = "Python betiği bulunamadı: \(pythonScriptPath)"
+        } else if pythonAppProcess != nil && pythonAppProcess!.isRunning {
+            pythonAppItem.toolTip = "Uygulama zaten çalışıyor (PID: \(pythonAppProcess!.processIdentifier))."
+        } else {
+            pythonAppItem.toolTip = "Şu betiği venv ile çalıştırır: \(pythonScriptPath)"
         }
-        menu.addItem(pythonAppItem)
+        pythonMenu.addItem(pythonAppItem)
 
-        // Durdur Öğesi (Aynı kalır)
         let stopPythonItem = NSMenuItem(title: "Python Uygulamasını Durdur", action: #selector(stopPythonAppAction), keyEquivalent: "")
         stopPythonItem.target = self
-        stopPythonItem.isEnabled = isPythonRunning
-        if isPythonRunning {
-             stopPythonItem.toolTip = "Çalışan uygulamayı (PID: \(pythonAppProcess!.processIdentifier)) durdurur."
+        stopPythonItem.isEnabled = isCloudflaredAvailable && pythonAppProcess != nil && pythonAppProcess!.isRunning
+        stopPythonItem.image = NSImage(systemSymbolName: "stop.circle.fill", accessibilityDescription: "Stop Python App")
+        if pythonAppProcess != nil && pythonAppProcess!.isRunning {
+            stopPythonItem.toolTip = "Çalışan uygulamayı (PID: \(pythonAppProcess!.processIdentifier)) durdurur."
         } else {
-             stopPythonItem.toolTip = "Çalışan Python uygulaması yok."
+            stopPythonItem.toolTip = "Çalışan Python uygulaması yok."
         }
-        menu.addItem(stopPythonItem)
+        pythonMenu.addItem(stopPythonItem)
+
+        let pythonMenuItem = NSMenuItem(title: "Python Panel", action: nil, keyEquivalent: "")
+        pythonMenuItem.submenu = pythonMenu
+        pythonMenuItem.image = NSImage(systemSymbolName: "terminal", accessibilityDescription: "Python Panel")
+        menu.addItem(pythonMenuItem)
         menu.addItem(NSMenuItem.separator())
-        // --- BİTİŞ: Python Uygulaması Başlatma/Durdurma Bölümü (Venv için Güncellenmiş) ---
-
-
 
         // --- Refresh, PDF Guide, Settings, Quit ---
-        let refreshItem = NSMenuItem(title: "Listeyi Yenile (Yönetilen)", action: #selector(refreshManagedTunnelListAction), keyEquivalent: "r"); refreshItem.target = self; menu.addItem(refreshItem)
+        let refreshItem = NSMenuItem(title: "Listeyi Yenile (Yönetilen)", action: #selector(refreshManagedTunnelListAction), keyEquivalent: "r")
+        refreshItem.target = self
+        refreshItem.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: "Refresh List")
+        menu.addItem(refreshItem)
         menu.addItem(NSMenuItem.separator())
 
-        let setupPdfItem = NSMenuItem(title: "Kurulum Kılavuzunu Aç (PDF)", action: #selector(openSetupPdfAction), keyEquivalent: ""); setupPdfItem.target = self; menu.addItem(setupPdfItem)
+        let setupPdfItem = NSMenuItem(title: "Kurulum Kılavuzunu Aç (PDF)", action: #selector(openSetupPdfAction), keyEquivalent: "")
+        setupPdfItem.target = self
+        setupPdfItem.image = NSImage(systemSymbolName: "book.fill", accessibilityDescription: "Open Setup Guide")
+        menu.addItem(setupPdfItem)
         menu.addItem(NSMenuItem.separator())
 
         // --- Launch At Login (macOS 13+) ---
         if #available(macOS 13.0, *) {
-            let launchAtLoginItem = NSMenuItem(title: "Oturum Açıldığında Başlat", action: #selector(toggleLaunchAtLoginAction(_:)), keyEquivalent: ""); launchAtLoginItem.target = self
+            let launchAtLoginItem = NSMenuItem(title: "Oturum Açıldığında Başlat", action: #selector(toggleLaunchAtLoginAction(_:)), keyEquivalent: "")
+            launchAtLoginItem.target = self
             launchAtLoginItem.state = tunnelManager.isLaunchAtLoginEnabled() ? .on : .off
+            launchAtLoginItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: "Launch at Login")
             menu.addItem(launchAtLoginItem)
         } else {
-            let launchAtLoginItem = NSMenuItem(title: "Oturum Açıldığında Başlat (macOS 13+)", action: nil, keyEquivalent: ""); launchAtLoginItem.isEnabled = false; menu.addItem(launchAtLoginItem)
+            let launchAtLoginItem = NSMenuItem(title: "Oturum Açıldığında Başlat (macOS 13+)", action: nil, keyEquivalent: "")
+            launchAtLoginItem.isEnabled = false
+            launchAtLoginItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: "Launch at Login")
+            menu.addItem(launchAtLoginItem)
         }
 
-        let settingsItem = NSMenuItem(title: "Ayarlar...", action: #selector(openSettingsWindowAction), keyEquivalent: ","); settingsItem.target = self; menu.addItem(settingsItem)
+        let settingsItem = NSMenuItem(title: "Ayarlar...", action: #selector(openSettingsWindowAction), keyEquivalent: ",")
+        settingsItem.target = self
+        settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Settings")
+        menu.addItem(settingsItem)
         menu.addItem(NSMenuItem.separator())
-        let quitItem = NSMenuItem(title: "Cloudflared Manager'dan Çık", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"); menu.addItem(quitItem)
+
+        let quitItem = NSMenuItem(title: "Cloudflared Manager'dan Çık", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Quit")
+        menu.addItem(quitItem)
 
         // Update the status item's menu
         statusItem?.menu = menu
@@ -990,6 +1095,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     // End AppDelegate
 }
+
 
 
 
