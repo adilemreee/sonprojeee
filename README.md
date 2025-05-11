@@ -1,6 +1,7 @@
 # Cloudflare Tunnel Manager
 
-<img src="Screenshot 2025-05-11 at 11.34.15.png" width="400" alt="Cloudflare Tunnel Manager Arayüzü">
+<img src="Screenshot 2025-05-11 at 11.34.15.png" width="300" height="auto" alt="Cloudflare Tunnel Manager Arayüzü">
+
 
 ## Proje Hakkında
 
