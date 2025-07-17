@@ -1,0 +1,1744 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "\n\nMAMP vHost file update attempted. You may need to restart MAMP servers." : {
+      "comment" : "Success message detail: MAMP vHost updated in managed creation"
+    },
+    "\n\nPlease check write permissions for the vHost file." : {
+      "comment" : "Custom alert message detail: Check vHost write permissions in MAMP creation."
+    },
+    "\n\nProject root not found for selected site: %@" : {
+      "comment" : "Custom alert message detail: Project root not found. Parameter is path in MAMP creation."
+    },
+    "\n(Waiting for URL...)" : {
+      "comment" : "Tooltip part: Waiting for public URL."
+    },
+    "\nError: %@" : {
+      "comment" : "Tooltip part: Error message. Parameter is the error."
+    },
+    "\nPID: %d" : {
+      "comment" : "Tooltip part: Process ID. Parameter is the PID."
+    },
+    "\nPublic: %@\n(Click to copy)" : {
+      "comment" : "Tooltip part: Public URL and instruction to copy. Parameter is the URL."
+    },
+    "   ‼️ Quick Tunnel: URL not found and terminated unexpectedly [%@]." : {
+      "comment" : "Log message: Quick tunnel URL not found and terminated unexpectedly. Parameter is tunnel ID."
+    },
+    "   'cloudflared login' finished. Status: %d" : {
+      "comment" : "Log message: 'cloudflared login' command finished. Parameter is status code."
+    },
+    "   'tunnel create %@' finished. Status: %d" : {
+      "comment" : "Log message: 'tunnel create' command finished. Parameters are tunnel name and status code.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   'tunnel create %1$@' finished. Status: %2$d"
+          }
+        }
+      }
+    },
+    "   'tunnel delete %@' [--force NOT USED] finished. Exit Code: %d" : {
+      "comment" : "Log message: 'tunnel delete' command finished without --force. Parameters are identifier and exit code.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   'tunnel delete %1$@' [--force NOT USED] finished. Exit Code: %2$d"
+          }
+        }
+      }
+    },
+    "   'tunnel route dns' finished. Status: %d" : {
+      "comment" : "Log message: 'tunnel route dns' command finished. Parameter is status code."
+    },
+    "   %@ stopped synchronously (with SIGTERM). Status -> Stopped." : {
+      "comment" : "Log message: Tunnel stopped synchronously. Parameter is tunnel name."
+    },
+    "   ☁️ Quick Tunnel URL (%@): %@" : {
+      "comment" : "Log message: Quick tunnel URL found. Parameters are tunnel ID and URL.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   ☁️ Quick Tunnel URL (%1$@): %2$@"
+          }
+        }
+      }
+    },
+    "   ⚠️ %@ could not be stopped synchronously (%.1fs timeout). Status -> Stopped (waiting for termination handler)." : {
+      "comment" : "Log message: Tunnel synchronous stop timed out. Parameters are tunnel name and timeout duration.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   ⚠️ %1$@ could not be stopped synchronously (%2$.1fs timeout). Status -> Stopped (waiting for termination handler)."
+          }
+        }
+      }
+    },
+    "   ⚠️ No running quick tunnel processes but list is not empty, clearing." : {
+      "comment" : "Log message: Quick tunnel list not empty but no processes running, clearing list."
+    },
+    "   ⚠️ Warning: Could not read tunnel UUID from config, attempting deletion by name ('%@')." : {
+      "comment" : "Log message: Warning, deleting tunnel by name as UUID not found. Parameter is tunnel name."
+    },
+    "   ✅ Configuration file created: %@" : {
+      "comment" : "Log message: Config file created successfully. Parameter is path."
+    },
+    "   ✅ Directory created." : {
+      "comment" : "Log message: Directory created successfully."
+    },
+    "   ✅ Launch at login status updated: %@" : {
+      "comment" : "Log message: Launch at login status updated successfully. Parameter is new status (true/false)."
+    },
+    "   ✅ Login successful or already logged in." : {
+      "comment" : "Log message: Login successful or already done."
+    },
+    "   ✅ Tunnel created: %@ (UUID: %@, JSON: %@)" : {
+      "comment" : "Log message: Tunnel created successfully. Parameters are name, UUID, JSON path.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   ✅ Tunnel created: %1$@ (UUID: %2$@, JSON: %3$@)"
+          }
+        }
+      }
+    },
+    "   ✅ Tunnel deleted successfully (Exit Code 0): %@" : {
+      "comment" : "Log message: Tunnel deleted successfully. Parameter is identifier."
+    },
+    "   ❌ Tunnel created but JSON file not found: %@ (Original Output Path: %@)" : {
+      "comment" : "Log message: Tunnel created but JSON file not found. Parameters are absolute path and original path from output.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   ❌ Tunnel created but JSON file not found: %1$@ (Original Output Path: %2$@)"
+          }
+        }
+      }
+    },
+    "   ❌ Tunnel deletion error (did not use --force): %@" : {
+      "comment" : "Log message: Tunnel deletion error without --force. Parameter is error message."
+    },
+    "   ❌ Tunnel deletion error: Name/UUID conflict or other inconsistency on Cloudflare side (did not use --force)." : {
+      "comment" : "Log message: Tunnel deletion error due to Cloudflare inconsistency, --force not used."
+    },
+    "   Also removing from list." : {
+      "comment" : "Log message suffix: Also removing from quick tunnel list."
+    },
+    "   Auto-stopping: %@" : {
+      "comment" : "Log message: Auto-stopping tunnel. Parameter is tunnel name."
+    },
+    "   Cloudflare login page should open in browser, or you are already logged in." : {
+      "comment" : "Log message: Cloudflare login page should open or user already logged in."
+    },
+    "   Continuing after stop attempt..." : {
+      "comment" : "Log message: Continuing after tunnel stop attempt."
+    },
+    "   Credential file not found at path specified in config: %@ (Original: '%@', Config: %@)" : {
+      "comment" : "Log message: Credential file not found at specified path. Parameters are standardized path, original path, config path.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   Credential file not found at path specified in config: %1$@ (Original: '%2$@', Config: %3$@)"
+          }
+        }
+      }
+    },
+    "   Deleted: %@" : {
+      "comment" : "Log message: Deleted file. Parameter is path."
+    },
+    "   Error message set: %@" : {
+      "comment" : "Log message: Error message set for quick tunnel. Parameter is error message."
+    },
+    "   Error:\n%@" : {
+      "comment" : "Log message: Error output from command. Parameter is error string."
+    },
+    "   Error: %@" : {
+      "comment" : "Log message: Error output from command. Parameter is error string.\nLog message: Error output from finished process. Parameter is error string."
+    },
+    "   Error: Tunnel terminated unexpectedly." : {
+      "comment" : "Log message: Tunnel terminated unexpectedly."
+    },
+    "   Fallback: Credential file found in ~/.cloudflared: %@" : {
+      "comment" : "Log message: Fallback, credential file found in .cloudflared directory. Parameter is path."
+    },
+    "   ℹ️ Tunnel already deleted or not found (Error message): %@" : {
+      "comment" : "Log message: Tunnel already deleted or not found by error message. Parameter is identifier."
+    },
+    "   Login process initiated, continue in browser." : {
+      "comment" : "Log message: Login process started, user to continue in browser."
+    },
+    "   No managed tunnels to start." : {
+      "comment" : "Log message: No managed tunnels to start."
+    },
+    "   No running managed tunnels." : {
+      "comment" : "Log message: No running managed tunnels."
+    },
+    "   No running quick tunnels." : {
+      "comment" : "Log message: No running quick tunnels."
+    },
+    "   Output:\n%@" : {
+      "comment" : "Log message: Output from command. Parameter is output string."
+    },
+    "   Output: %@" : {
+      "comment" : "Log message: Output from command. Parameter is output string."
+    },
+    "   Quick tunnel process started (PID: %1$d, ID: %2$@). Waiting for output..." : {
+      "comment" : "Log message: Quick tunnel process started. Parameters are PID and tunnel ID."
+    },
+    "   Quick Tunnel Start Error Updated (%@): %@" : {
+      "comment" : "Log message: Quick tunnel start error updated. Parameters are tunnel ID and error message.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "   Quick Tunnel Start Error Updated (%1$@): %2$@"
+          }
+        }
+      }
+    },
+    "   Quick tunnel stopped or finished normally (%@)." : {
+      "comment" : "Log message: Quick tunnel stopped or finished normally. Parameter is tunnel ID."
+    },
+    "   Started. PID: %d" : {
+      "comment" : "Log message: Tunnel process started. Parameter is PID."
+    },
+    "   Status -> Error (Check)" : {
+      "comment" : "Log message suffix: Status changed to Error during check."
+    },
+    "   Status -> Stopped (Check)" : {
+      "comment" : "Log message suffix: Status changed to Stopped during check."
+    },
+    "   Status updated -> Running (%@)" : {
+      "comment" : "Log message: Tunnel status updated to running. Parameter is tunnel name."
+    },
+    "   Stop signal sent (asynchronously)." : {
+      "comment" : "Log message: Asynchronous stop signal sent."
+    },
+    "   Stopping managed tunnels..." : {
+      "comment" : "Log message: Stopping managed tunnels."
+    },
+    "   Stopping quick tunnels..." : {
+      "comment" : "Log message: Stopping quick tunnels."
+    },
+    "   Stopping tunnel before deletion: %@" : {
+      "comment" : "Log message: Stopping tunnel before deletion. Parameter is tunnel name."
+    },
+    "   Termination handler removing %@ from running map (unexpected termination)." : {
+      "comment" : "Log message: Removing tunnel from running map due to unexpected termination. Parameter is tunnel name."
+    },
+    "   Termination handler: Quick tunnel %@ not found in list." : {
+      "comment" : "Log message: Quick tunnel not found in list during termination. Parameter is tunnel ID."
+    },
+    "   Tunnel not running or not managed by this app." : {
+      "comment" : "Log message: Tunnel not running or not managed by app, skipping stop for deletion."
+    },
+    "   Tunnel stopped (termination handler)." : {
+      "comment" : "Log message: Tunnel stopped via termination handler."
+    },
+    "   Tunnel terminated during startup (%@). Status -> Error." : {
+      "comment" : "Log message: Tunnel terminated during startup. Parameter is tunnel name."
+    },
+    "   Tunnels to start: %@" : {
+      "comment" : "Log message: List of tunnels to start. Parameter is list of names."
+    },
+    "   Virtual environment (venv) interpreter will be used: %@" : {
+      "comment" : "Log message: Using venv interpreter. Parameter is the path."
+    },
+    "   Warning: 'credentials-file' key not found in config: %@" : {
+      "comment" : "Log message: 'credentials-file' key not found in config. Parameter is config path."
+    },
+    " MAMP configuration updated." : {
+      "comment" : "Notification body suffix: MAMP config updated."
+    },
+    "-- Select --" : {
+      "comment" : "Default placeholder for MAMP site picker"
+    },
+    "--- Start All Managed ---" : {
+      "comment" : "Log section header: Start All Managed Tunnels"
+    },
+    "--- Stop All Tunnels (%@) ---" : {
+      "comment" : "Log section header: Stop All Tunnels. Parameter is sync/async."
+    },
+    "--- Synchronous managed stops complete (or signal sent) ---" : {
+      "comment" : "Log message: Synchronous managed tunnel stops complete."
+    },
+    "'%@.yml' file created." : {
+      "comment" : "Notification body: Config file created. Parameter is config name."
+    },
+    "'%@' directive added. MAMP servers may need to be restarted for changes to take effect." : {
+      "comment" : "Notification body: Listen directive added to httpd.conf, MAMP restart may be needed. Parameter is the directive."
+    },
+    "'%@' is not a directory." : {
+      "comment" : "Notification body: Path is not a directory. Parameter is path."
+    },
+    "'%@' was deleted from Cloudflare." : {
+      "comment" : "Notification body: Tunnel deleted from Cloudflare. Parameter is tunnel name."
+    },
+    "'%@' was successfully started." : {
+      "comment" : "Notification body: Tunnel successfully started. Parameter is tunnel name."
+    },
+    "'%@' was successfully stopped." : {
+      "comment" : "Notification body: Tunnel successfully stopped. Parameter is tunnel name."
+    },
+    "'%1$@.yml' created, but error(s) occurred while updating MAMP configuration:\n%2$@\nPlease check MAMP settings manually." : {
+      "comment" : "Notification body: Config created, but MAMP update errors. Parameters are config name and combined error description."
+    },
+    "'Listen %@' could not be added. Check permissions or add manually.\n%@" : {
+      "comment" : "Notification body: Failed to add Listen directive to httpd.conf. Parameters are port and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "'Listen %1$@' could not be added. Check permissions or add manually.\n%2$@"
+          }
+        }
+      }
+    },
+    "(Select Site)" : {
+      "comment" : "Placeholder text when no MAMP site is selected for document root"
+    },
+    "(Synchronous stop attempted)" : {
+      "comment" : "Notification body suffix: Synchronous stop attempted"
+    },
+    "%@\nDetail: %@" : {
+      "comment" : "Error alert: MAMP command failed. Parameters are general failure message and specific detail.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@\nDetail: %2$@"
+          }
+        }
+      }
+    },
+    "%@ -> %@" : {
+      "comment" : "Notification body: DNS routed from hostname to tunnel name. Parameters are hostname and tunnel name.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ -> %2$@"
+          }
+        }
+      }
+    },
+    "%@ (Error)" : {
+      "comment" : "Menu item display for quick tunnel with error. Parameter is local URL.\nMenu item display for tunnel with error. Parameter is tunnel name."
+    },
+    "%@ (Starting...)" : {
+      "comment" : "Menu item display for tunnel starting. Parameter is tunnel name."
+    },
+    "%@ (Starting/Waiting...)" : {
+      "comment" : "Menu item display for quick tunnel starting/waiting. Parameter is local URL."
+    },
+    "%@ (Stopping...)" : {
+      "comment" : "Menu item display for tunnel stopping. Parameter is tunnel name."
+    },
+    "%@ is already stopping." : {
+      "comment" : "Log message: Tunnel is already in the process of stopping. Parameter is tunnel name."
+    },
+    "%@ is running (PID: %d)." : {
+      "comment" : "Notification body: Python script is running. Parameters are script name and PID.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is running (PID: %2$d)."
+          }
+        }
+      }
+    },
+    "%1$@\n%2$@..." : {
+      "comment" : "Notification body: Quick tunnel error. Parameters are local URL and truncated error message."
+    },
+    "%1$@\n⬇️\n%2$@" : {
+      "comment" : "Notification body: Quick tunnel ready. Parameters are local URL and public URL."
+    },
+    "⏹️ Managed tunnel %@ finished. Code: %d, Reason: %@" : {
+      "comment" : "Log message: Managed tunnel finished. Parameters are tunnel name, exit code, exit reason.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "⏹️ Managed tunnel %1$@ finished. Code: %2$d, Reason: %3$@"
+          }
+        }
+      }
+    },
+    "▶️ Starting managed tunnel %@..." : {
+      "comment" : "Log message: Starting managed tunnel. Parameter is tunnel name."
+    },
+    "⚠️ Check: %@ process in map but not running! Termination handler should have caught this. Cleaning up." : {
+      "comment" : "Log message: Process in map but not running. Parameter is tunnel name."
+    },
+    "⚠️ Config read error: %@, %@" : {
+      "comment" : "Log message: Error reading config file. Parameters are file path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "⚠️ Config read error: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "⚠️ Invalid user notification received." : {
+      "comment" : "Log message: Received a user notification with missing data"
+    },
+    "⚠️ MAMP httpd.conf file not found or path could not be retrieved: %@" : {
+      "comment" : "Log message: MAMP httpd.conf file not found. Parameter is the path or N/A."
+    },
+    "⚠️ MAMP httpd.conf Listen update error: %@" : {
+      "comment" : "Log message: MAMP httpd.conf Listen update error. Parameter is error description."
+    },
+    "⚠️ MAMP vHost directory not found, creating: %@" : {
+      "comment" : "Log message: MAMP vHost directory not found, creating it. Parameter is path."
+    },
+    "⚠️ MAMP vHost file not found or path could not be retrieved: %@" : {
+      "comment" : "Log message: MAMP vHost file not found. Parameter is the path or N/A."
+    },
+    "⚠️ MAMP vHost update error: %@" : {
+      "comment" : "Log message: MAMP vHost update error. Parameter is error description."
+    },
+    "⚠️ No 'Listen' directive found in MAMP httpd.conf. Appending to end." : {
+      "comment" : "Log message: No Listen directive found, appending to end."
+    },
+    "⚠️ Running process (%@) not in list, stopping anyway..." : {
+      "comment" : "Log message: Running process not in list, stopping it. Parameter is config path."
+    },
+    "⚠️ SF Symbol 'cloud.fill' not found. Using text." : {
+      "comment" : "Log message: SF Symbol for cloud icon not found"
+    },
+    "⚠️ Stopping: %@ process not in map, correcting status -> Stopped" : {
+      "comment" : "Log message: Correcting status for tunnel process not in map. Parameter is tunnel name."
+    },
+    "⚠️ vHost file not found, new file will be created: %@" : {
+      "comment" : "Log message: vHost file not found, will create new. Parameter is path."
+    },
+    "⚠️ WARNING: cloudflared not found at: %@" : {
+      "comment" : "Log message: cloudflared executable not found warning. Parameter is path."
+    },
+    "⚠️ Warning: Other NameVirtualHost directives exist in vHost file. Directive for '%@' not added. Manual check may be required." : {
+      "comment" : "Log message: Other NameVirtualHost directives exist. Parameter is listen directive."
+    },
+    "⚠️ Warning: Virtual environment interpreter not found or not executable: %@. Using fallback: %@ python3" : {
+      "comment" : "Log message: Venv interpreter not found or not executable. Parameters are venv path and fallback interpreter.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "⚠️ Warning: Virtual environment interpreter not found or not executable: %1$@. Using fallback: %2$@ python3"
+          }
+        }
+      }
+    },
+    "✅ MAMP command completed successfully: %@" : {
+      "comment" : "Log message: MAMP command successful. Parameter is script name."
+    },
+    "✅ MAMP httpd.conf Listen directive updated successfully (or already existed)." : {
+      "comment" : "Log message: MAMP httpd.conf Listen updated successfully."
+    },
+    "✅ MAMP httpd.conf updated: '%@' directive added." : {
+      "comment" : "Log message: httpd.conf updated with Listen directive. Parameter is the directive."
+    },
+    "✅ MAMP vHost file updated successfully (or already existed)." : {
+      "comment" : "Log message: MAMP vHost updated successfully."
+    },
+    "✅ MAMP vHost file updated: %@ (Port: %@)" : {
+      "comment" : "Log message: MAMP vHost file updated. Parameters are path and port.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "✅ MAMP vHost file updated: %1$@ (Port: %2$@)"
+          }
+        }
+      }
+    },
+    "✅ Notification permission granted." : {
+      "comment" : "Log message: Notification permission granted."
+    },
+    "✅ Python script started: %@, PID: %d, Interpreter: %@" : {
+      "comment" : "Log message: Python script started. Parameters are script path, PID, and interpreter path.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "✅ Python script started: %1$@, PID: %2$d, Interpreter: %3$@"
+          }
+        }
+      }
+    },
+    "❌ Config created, but MAMP update(s) failed." : {
+      "comment" : "Log message: Config created, but MAMP updates failed."
+    },
+    "❌ Could not change launch at login: %@" : {
+      "comment" : "Log message: Error changing launch at login. Parameter is error."
+    },
+    "❌ Could not scan MAMP site directory: %@ - %@" : {
+      "comment" : "Log message: Error scanning MAMP site directory. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Could not scan MAMP site directory: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "❌ Error running Python script: %@" : {
+      "comment" : "Log message: Error running Python script. Parameter is the error description."
+    },
+    "❌ ERROR updating MAMP httpd.conf: %@" : {
+      "comment" : "Log message: Error updating httpd.conf. Parameter is error."
+    },
+    "❌ ERROR updating MAMP vHost file: %@" : {
+      "comment" : "Log message: Error updating MAMP vHost file. Parameter is error."
+    },
+    "❌ Error: %@ is not a directory." : {
+      "comment" : "Log message: Path is not a directory. Parameter is path."
+    },
+    "❌ Error: Could not create directory %@: %@" : {
+      "comment" : "Log message: Error creating directory. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Error: Could not create directory %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "❌ Error: Could not open %@ for monitoring. Errno: %d (%@)" : {
+      "comment" : "Log message: Error opening directory for monitoring. Parameters are path, errno, strerror.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Error: Could not open %1$@ for monitoring. Errno: %2$d (%3$@)"
+          }
+        }
+      }
+    },
+    "❌ Error: Could not write configuration file: %@ - %@" : {
+      "comment" : "Log message: Error writing config file. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Error: Could not write configuration file: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "❌ Error: Error reading directory %@: %@" : {
+      "comment" : "Log message: Error reading directory. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Error: Error reading directory %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "❌ Error: Only managed tunnels with a config file can be toggled: %@" : {
+      "comment" : "Log message: Error toggling tunnel without config. Parameter is tunnel name."
+    },
+    "❌ Error: Python project directory not found: %@" : {
+      "comment" : "Log message: Python project directory not found. Parameter is the path."
+    },
+    "❌ Error: Python script not found: %@" : {
+      "comment" : "Log message: Python script not found. Parameter is the path."
+    },
+    "❌ Error: Setup PDF not found in app bundle ('kullanım.pdf')." : {
+      "comment" : "Log message: Setup PDF file not found in bundle."
+    },
+    "❌ Error: showWindow called but TunnelManager is not available." : {
+      "comment" : "Log message: Error in showWindow, TunnelManager is nil."
+    },
+    "❌ Error: Tunnel not found: %@" : {
+      "comment" : "Log message: Error, tunnel not found for toggle. Parameter is tunnel name."
+    },
+    "❌ Failed to send notification: %@ - %@" : {
+      "comment" : "Log message: Failed to send notification. Parameters are identifier and error description.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Failed to send notification: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "❌ Failed to start 'tunnel delete' process: %@" : {
+      "comment" : "Log message: Failed to start 'tunnel delete' process. Parameter is error."
+    },
+    "❌ Failed to start Cloudflare login process: %@" : {
+      "comment" : "Log message: Failed to start Cloudflare login process. Parameter is error."
+    },
+    "❌ Failed to start quick tunnel process (try process.run() error): %@" : {
+      "comment" : "Log message: Failed to start quick tunnel process. Parameter is error."
+    },
+    "❌ Launch at login status could not be changed (expected: %@, result: %@)." : {
+      "comment" : "Log message: Failed to change launch at login status. Parameters are expected status and actual status.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Launch at login status could not be changed (expected: %1$@, result: %2$@)."
+          }
+        }
+      }
+    },
+    "❌ Local file deletion error: %@ - %@" : {
+      "comment" : "Log message: Error deleting local file. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Local file deletion error: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "❌ MAMP Script Error: %@" : {
+      "comment" : "Log message: MAMP script error. Parameter is error detail.\nLog message: MAMP script error. Parameter is error message."
+    },
+    "❌ MAMP site directory not found: %@" : {
+      "comment" : "Log message: MAMP site directory not found. Parameter is path."
+    },
+    "❌ Monitoring could not be started: Directory does not exist or is not a directory - %@" : {
+      "comment" : "Log message: Failed to start directory monitoring. Parameter is path."
+    },
+    "❌ Notification permission error: %@" : {
+      "comment" : "Log message: Error requesting notification permission. Parameter is error description."
+    },
+    "❌ Regex Error: %@ - Pattern: %@" : {
+      "comment" : "Log message: Regex error. Parameters are error description and pattern.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "❌ Regex Error: %1$@ - Pattern: %2$@"
+          }
+        }
+      }
+    },
+    "❓ Quick tunnel data to stop not found (process exists but data missing): %@" : {
+      "comment" : "Log message: Quick tunnel data to stop not found. Parameter is tunnel ID."
+    },
+    "❓ Quick tunnel process to stop not found: %@" : {
+      "comment" : "Log message: Quick tunnel process to stop not found. Parameter is tunnel ID."
+    },
+    "❗️ cloudflared not found!" : {
+      "comment" : "Menu item: cloudflared executable not found"
+    },
+    "🏁 Python script finished (%@). Interpreter: %@" : {
+      "comment" : "Log message: Python script finished. Parameters are script name and interpreter path.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🏁 Python script finished (%1$@). Interpreter: %2$@"
+          }
+        }
+      }
+    },
+    "🏁 Quick tunnel (%1$@ - %2$@) finished. Code: %3$d, Reason: %4$@" : {
+      "comment" : "Log message: Quick tunnel finished. Parameters are tunnel ID, local URL, exit code, exit reason."
+    },
+    "🏗️ Creating new tunnel: %@..." : {
+      "comment" : "Log message: Creating new tunnel. Parameter is tunnel name."
+    },
+    "👀 Directory monitoring started: %@" : {
+      "comment" : "Log message: Directory monitoring started. Parameter is path."
+    },
+    "📂 Change detected: %@ -> Refreshing managed tunnel list." : {
+      "comment" : "Log message: Change detected in directory, refreshing list. Parameter is directory path."
+    },
+    "📄 Creating configuration file: %@.yml" : {
+      "comment" : "Log message: Creating config file. Parameter is config name."
+    },
+    "🔄 PID corrected (Check): %@ %d -> %d" : {
+      "comment" : "Log message: Corrected tunnel PID. Parameters are tunnel name, old PID, new PID.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🔄 PID corrected (Check): %1$@ %2$d -> %3$d"
+          }
+        }
+      }
+    },
+    "🔄 Status corrected (Check): %@ (%@) -> Running" : {
+      "comment" : "Log message: Corrected tunnel status to Running. Parameters are tunnel name and old status.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🔄 Status corrected (Check): %1$@ (%2$@) -> Running"
+          }
+        }
+      }
+    },
+    "🔄 Status corrected (Check): %@ process not in map -> Stopped" : {
+      "comment" : "Log message: Corrected tunnel status to Stopped (process not in map). Parameter is tunnel name."
+    },
+    "🔑 Initializing Cloudflare login (browser will open)..." : {
+      "comment" : "Log message: Initializing Cloudflare login."
+    },
+    "🔗 Routing DNS: %@ -> %@..." : {
+      "comment" : "Log message: Routing DNS. Parameters are tunnel identifier and hostname.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🔗 Routing DNS: %1$@ -> %2$@..."
+          }
+        }
+      }
+    },
+    "🗑️ Deleting tunnel (Identifier: %@, Type: %@) [--force NOT USED]..." : {
+      "comment" : "Log message: Deleting tunnel without --force. Parameters are identifier and type (UUID/Name).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🗑️ Deleting tunnel (Identifier: %1$@, Type: %2$@) [--force NOT USED]..."
+          }
+        }
+      }
+    },
+    "🚀 Running MAMP command: %@" : {
+      "comment" : "Log message: Running MAMP command. Parameter is script path."
+    },
+    "🚀 Starting Python script: %@" : {
+      "comment" : "Log message: Starting Python script. Parameter is the script path."
+    },
+    "🚀 Starting quick tunnel (Simple Arg): %@..." : {
+      "comment" : "Log message: Starting quick tunnel with simple argument. Parameter is local URL."
+    },
+    "🚫 Notification permission denied." : {
+      "comment" : "Log message: Notification permission denied."
+    },
+    "🛑 Stopping directory monitoring: %@" : {
+      "comment" : "Log message: Stopping directory monitoring. Parameter is path."
+    },
+    "🛑 Stopping managed tunnel %@..." : {
+      "comment" : "Log message: Stopping managed tunnel. Parameter is tunnel name."
+    },
+    "🛑 Stopping Python script (PID: %d)..." : {
+      "comment" : "Log message: Stopping Python script. Parameter is PID."
+    },
+    "🛑 Stopping quick tunnel: %@ (%@) PID: %d" : {
+      "comment" : "Log message: Stopping quick tunnel. Parameters are local URL, tunnel ID, PID.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "🛑 Stopping quick tunnel: %1$@ (%2$@) PID: %3$d"
+          }
+        }
+      }
+    },
+    "All Tunnels Stopped" : {
+      "comment" : "Notification title: All tunnels stopped"
+    },
+    "already exists" : {
+      "comment" : "Substring in error message for DNS record already exists\nSubstring in output message for DNS record already exists"
+    },
+    "already logged in" : {
+      "comment" : "Substring in already logged in message"
+    },
+    "An error occurred while running Python script '%@':\n%@" : {
+      "comment" : "Error alert message: Python script execution failed. Parameters are script path and error description.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "An error occurred while running Python script '%1$@':\n%2$@"
+          }
+        }
+      }
+    },
+    "Application is already running (PID: %d)." : {
+      "comment" : "Tooltip: Python app already running. Parameter is PID."
+    },
+    "Application is closing..." : {
+      "comment" : "Log message: Application will terminate"
+    },
+    "Asynchronous" : {
+      "comment" : "Asynchronous mode for stopping tunnels"
+    },
+    "Cancel" : {
+      "comment" : "Alert button: Cancel action\nButton title: Cancel action in MAMP creation form\nButton title: Cancel action in managed creation form"
+    },
+    "Cannot open window: Tunnel Manager not found." : {
+      "comment" : "Error message: Cannot open window due to missing TunnelManager."
+    },
+    "CfT" : {
+      "comment" : "Fallback text for status bar button if icon fails"
+    },
+    "Cloudflare Login" : {
+      "comment" : "Accessibility description for Cloudflare login icon"
+    },
+    "Cloudflare Login / Check..." : {
+      "comment" : "Menu item: Cloudflare login or check status"
+    },
+    "Cloudflare Login Check" : {
+      "comment" : "Notification title: Cloudflare login check"
+    },
+    "Cloudflared Directory Error" : {
+      "comment" : "Notification title: Error with cloudflared directory"
+    },
+    "Cloudflared directory path: %@" : {
+      "comment" : "Log message: Cloudflared directory path. Parameter is path."
+    },
+    "cloudflared executable not found at: %@" : {
+      "comment" : "Error message in createTunnel: cloudflared not found. Parameter is path."
+    },
+    "cloudflared executable not found: %@" : {
+      "comment" : "Error message: cloudflared executable not found. Parameter is path."
+    },
+    "cloudflared executable not found." : {
+      "comment" : "Error message in deleteTunnel: cloudflared not found.\nNotification body: cloudflared executable not found for starting tunnel."
+    },
+    "Cloudflared Not Found" : {
+      "comment" : "Accessibility description for cloudflared not found icon\nNotification title: cloudflared executable not found"
+    },
+    "cloudflared not found: %@" : {
+      "comment" : "Error message: cloudflared not found for quick tunnel. Parameter is path."
+    },
+    "cloudflared not found." : {
+      "comment" : "Error message in cloudflareLogin: cloudflared not found.\nError message in routeDns: cloudflared not found."
+    },
+    "Cloudflared Path Error" : {
+      "comment" : "Notification title: Error with cloudflared path"
+    },
+    "Cloudflared Tunnels" : {
+      "comment" : "Accessibility description for status bar icon"
+    },
+    "Config Created" : {
+      "comment" : "Notification title: Config file created"
+    },
+    "Config Created (MAMP Warning)" : {
+      "comment" : "Notification title: Config created with MAMP warning"
+    },
+    "Config file created, but MAMP update(s) failed:\n%@" : {
+      "comment" : "Error message for partial success with MAMP errors. Parameter is combined error description."
+    },
+    "Config Name" : {
+      "comment" : "Form field label: Config Name in MAMP creation\nForm field label: Config Name in managed creation"
+    },
+    "Config: %@" : {
+      "comment" : "Tooltip part: Config file path. Parameter is the path."
+    },
+    "Configuration file already exists: %@" : {
+      "comment" : "Error message: Config file already exists. Parameter is path."
+    },
+    "Could Not Copy" : {
+      "comment" : "Notification title: Failed to copy URL"
+    },
+    "Could not create ~/.cloudflared directory: %@" : {
+      "comment" : "Error message: Failed to create .cloudflared directory. Parameter is error description."
+    },
+    "Could not create MAMP vHost directory: %@\n%@" : {
+      "comment" : "Error message: Failed to create MAMP vHost directory. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not create MAMP vHost directory: %1$@\n%2$@"
+          }
+        }
+      }
+    },
+    "Could not create or access '%@'." : {
+      "comment" : "Notification body: Failed to create/access cloudflared directory. Parameter is path."
+    },
+    "Could not create regex for vHost check: %@" : {
+      "comment" : "Error message: Failed to create regex for vHost check. Parameter is error."
+    },
+    "could not find tunnel" : {
+      "comment" : "Substring in error message for could not find tunnel"
+    },
+    "Could not start quick tunnel:\n%@" : {
+      "comment" : "Error alert: Failed to start quick tunnel. Parameter is error description."
+    },
+    "Could not write to MAMP vHost file:\n%@" : {
+      "comment" : "Error message: Failed to write to MAMP vHost file. Parameter is error."
+    },
+    "Create" : {
+      "comment" : "Button title: Create action in MAMP creation form\nButton title: Create action in managed creation form"
+    },
+    "Create / Start" : {
+      "comment" : "Menu section header: Create/Start tunnels"
+    },
+    "Create from MAMP" : {
+      "comment" : "Accessibility description for create from MAMP icon"
+    },
+    "Create from MAMP Site..." : {
+      "comment" : "Menu item: Create tunnel from MAMP site"
+    },
+    "Create New Managed Tunnel" : {
+      "comment" : "View title: Create new managed tunnel\nWindow title: Create new managed tunnel"
+    },
+    "Create Tunnel from MAMP Site" : {
+      "comment" : "View title: Create tunnel from MAMP site\nWindow title: Create tunnel from MAMP site"
+    },
+    "Create/Start" : {
+      "comment" : "Accessibility description for create/start icon"
+    },
+    "Creating configuration file '%@.yml'..." : {
+      "comment" : "Status message: Creating config file. Parameter is config name in MAMP creation.\nStatus message: Creating config file. Parameter is config name in managed creation."
+    },
+    "Creating new window: %@" : {
+      "comment" : "Log message: Creating new window. Parameter is window title."
+    },
+    "Creating tunnel '%@' on Cloudflare..." : {
+      "comment" : "Status message: Creating tunnel on Cloudflare. Parameter is tunnel name in MAMP creation.\nStatus message: Creating tunnel on Cloudflare. Parameter is tunnel name in managed creation."
+    },
+    "Delete Local Files?" : {
+      "comment" : "Alert title: Ask to delete local files"
+    },
+    "Delete This Tunnel..." : {
+      "comment" : "Menu item: Delete this tunnel"
+    },
+    "Delete Tunnel" : {
+      "comment" : "Accessibility description for delete tunnel icon"
+    },
+    "Delete Tunnel '%@'" : {
+      "comment" : "Alert title: Delete tunnel. Parameter is tunnel name."
+    },
+    "Deletes the tunnel from Cloudflare and optionally local files. ATTENTION! Cannot be undone." : {
+      "comment" : "Tooltip: Delete tunnel warning"
+    },
+    "Deleting local files: %@" : {
+      "comment" : "Log message: Deleting local files. Parameter is list of files."
+    },
+    "Deletion cancelled." : {
+      "comment" : "Log message: Tunnel deletion was cancelled by user."
+    },
+    "Deletion process starting for: %@" : {
+      "comment" : "Log message: Starting tunnel deletion. Parameter is tunnel name."
+    },
+    "Directory found." : {
+      "comment" : "Tooltip: Document root directory found"
+    },
+    "Directory not found!" : {
+      "comment" : "Tooltip: Document root directory not found"
+    },
+    "Directory Read Error" : {
+      "comment" : "Notification title: Error reading directory"
+    },
+    "Directory: %@" : {
+      "comment" : "Empty state detail: MAMP directory path. Parameter is path in MAMP creation form."
+    },
+    "Disabled" : {
+      "comment" : "Notification body: Launch at login disabled"
+    },
+    "Disabling" : {
+      "comment" : "Action: Disabling launch at login"
+    },
+    "DNS record for '%@' was successfully created or updated.\n\n%@" : {
+      "comment" : "Info alert message: DNS record created/updated. Parameters are hostname and output from command.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "DNS record for '%1$@' was successfully created or updated.\n\n%2$@"
+          }
+        }
+      }
+    },
+    "DNS route added/updated successfully." : {
+      "comment" : "Success message: DNS route added/updated."
+    },
+    "DNS Routed" : {
+      "comment" : "Notification title: DNS record routed"
+    },
+    "DNS routing cancelled." : {
+      "comment" : "Log message: DNS routing was cancelled by user."
+    },
+    "DNS routing error (Code: %d). Is your domain on Cloudflare?" : {
+      "comment" : "Error message: DNS routing error. Parameter is exit code."
+    },
+    "DNS routing error for '%@':\n%@" : {
+      "comment" : "Error alert: DNS routing failed. Parameters are hostname and error description.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "DNS routing error for '%1$@':\n%2$@"
+          }
+        }
+      }
+    },
+    "DNS Routing Successful" : {
+      "comment" : "Info alert title: DNS routing successful"
+    },
+    "DocumentRoot not found: %@" : {
+      "comment" : "Error message: DocumentRoot not found for MAMP vHost. Parameter is path."
+    },
+    "Domain to access" : {
+      "comment" : "Placeholder for hostname in MAMP creation\nPlaceholder for hostname in managed creation"
+    },
+    "Done" : {
+      "comment" : "Alert button: Done in MAMP creation form"
+    },
+    "e.g., app.yourdomain.com" : {
+      "comment" : "Placeholder for hostname input field"
+    },
+    "Enabled" : {
+      "comment" : "Notification body: Launch at login enabled"
+    },
+    "Enabling" : {
+      "comment" : "Action: Enabling launch at login"
+    },
+    "Enter the hostname to route to tunnel '%@' (UUID: %@):" : {
+      "comment" : "Alert informative text: Prompt for hostname for DNS routing. Parameters are tunnel name and UUID.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the hostname to route to tunnel '%1$@' (UUID: %2$@):"
+          }
+        }
+      }
+    },
+    "Enter the local URL to expose:" : {
+      "comment" : "Alert informative text: Prompt for local URL for quick tunnel"
+    },
+    "Error" : {
+      "comment" : "Alert title: Error\nAlert title: Error in MAMP creation form\nAlert title: Error in managed creation form\nCustom alert title: Error in MAMP creation\nTunnel status: Error"
+    },
+    "Error changing launch at login setting:\n%@" : {
+      "comment" : "Error alert: Failed to change launch at login setting. Parameter is error description."
+    },
+    "Error creating tunnel on Cloudflare:\n%@" : {
+      "comment" : "Custom alert message: Cloudflare tunnel creation error. Parameter is error description in MAMP creation.\nError message: Cloudflare tunnel creation error. Parameter is error description in managed creation."
+    },
+    "Error deleting some local files:\n%@" : {
+      "comment" : "Error alert: Failed to delete some local files. Parameter is list of errors."
+    },
+    "Error deleting tunnel '%@':\n%@" : {
+      "comment" : "Error alert: Failed to delete tunnel. Parameters are tunnel name and error description.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error deleting tunnel '%1$@':\n%2$@"
+          }
+        }
+      }
+    },
+    "Error detected: %@" : {
+      "comment" : "Generic error detected message. Parameter is the error pattern."
+    },
+    "Error during Cloudflare login process:\n%@" : {
+      "comment" : "Error alert: Cloudflare login failed. Parameter is error description."
+    },
+    "Error reading '%@'." : {
+      "comment" : "Notification body: Error reading directory. Parameter is path."
+    },
+    "Error running MAMP script '%@': %@" : {
+      "comment" : "Error detail: Failed to run MAMP script. Parameters are script name and error description.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error running MAMP script '%1$@': %2$@"
+          }
+        }
+      }
+    },
+    "Error starting MAMP servers." : {
+      "comment" : "Error message when starting MAMP servers fails"
+    },
+    "Error stopping MAMP servers." : {
+      "comment" : "Error message when stopping MAMP servers fails"
+    },
+    "Error: Manager could not be initialized" : {
+      "comment" : "Menu item: Error when tunnel manager fails to init"
+    },
+    "Error." : {
+      "comment" : "Status message: Error (short) in MAMP creation\nStatus message: Error (short) in managed creation"
+    },
+    "Existing window brought to front: %@" : {
+      "comment" : "Log message: Existing window brought to front. Parameter is window title."
+    },
+    "Failed to start process: %@" : {
+      "comment" : "Error message: Failed to start process. Parameter is error description.\nNotification body: Failed to start quick tunnel process. Parameter is error description.\nNotification body: Failed to start tunnel process. Parameter is error description."
+    },
+    "File Management" : {
+      "comment" : "Accessibility description for file management icon\nMenu section header: File Management"
+    },
+    "Files associated with '%@' were deleted." : {
+      "comment" : "Notification body: Local files deleted for tunnel. Parameter is tunnel name."
+    },
+    "Folder Management" : {
+      "comment" : "Accessibility description for folder management icon\nMenu section header: Folder Management"
+    },
+    "Great!" : {
+      "comment" : "Alert button: Great! in managed creation form"
+    },
+    "Hello, world!" : {
+      "comment" : "Default content text"
+    },
+    "Hostname" : {
+      "comment" : "Form field label: Hostname in MAMP creation\nForm field label: Hostname in managed creation"
+    },
+    "http://localhost:8000" : {
+      "comment" : "Placeholder for local URL input field"
+    },
+    "ℹ️ %@ is already running or starting." : {
+      "comment" : "Log message: Tunnel already running/starting. Parameter is tunnel name."
+    },
+    "ℹ️ %@ is already stopping." : {
+      "comment" : "Log message: Tunnel is already in the process of stopping. Parameter is tunnel name."
+    },
+    "ℹ️ Directory %@ not found, creating..." : {
+      "comment" : "Log message: Directory not found, creating it. Parameter is path."
+    },
+    "ℹ️ DocumentRoot not specified or empty, MAMP configuration files not updated." : {
+      "comment" : "Log message: DocumentRoot not provided, MAMP files not updated."
+    },
+    "ℹ️ MAMP httpd.conf already contains '%@'." : {
+      "comment" : "Log message: httpd.conf already contains Listen directive. Parameter is the directive."
+    },
+    "ℹ️ MAMP vHost file already contains entry for '%@' on port %@. No update made." : {
+      "comment" : "Log message: MAMP vHost entry already exists. Parameters are server name and listen directive.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ℹ️ MAMP vHost file already contains entry for '%1$@' on port %2$@. No update made."
+          }
+        }
+      }
+    },
+    "ℹ️ No running Python script found to stop." : {
+      "comment" : "Log message: Python script not running, cannot stop."
+    },
+    "If project root is valid and selected, attempts to add an entry to httpd-vhosts.conf. MAMP restart required." : {
+      "comment" : "Informational note about MAMP vHost update in managed creation"
+    },
+    "Invalid config file name." : {
+      "comment" : "Error message: Invalid config file name."
+    },
+    "Invalid hostname format." : {
+      "comment" : "Error message: Invalid hostname format for DNS routing\nError message: Invalid hostname format for DNS routing."
+    },
+    "Invalid local URL format.\n(e.g., http://localhost:8000)" : {
+      "comment" : "Error message: Invalid local URL format for quick tunnel"
+    },
+    "Invalid local URL format. (e.g., http://localhost:8000)" : {
+      "comment" : "Error message: Invalid local URL format for quick tunnel."
+    },
+    "Invalid Port Number: %@" : {
+      "comment" : "Error message: Invalid port number for MAMP vHost. Parameter is port.\nError message: Invalid port number for httpd.conf Listen. Parameter is port."
+    },
+    "Invalid port number." : {
+      "comment" : "Error message: Invalid port number in managed creation"
+    },
+    "Invalid ServerName: %@" : {
+      "comment" : "Error message: Invalid ServerName for MAMP vHost. Parameter is server name."
+    },
+    "Last Error: %@" : {
+      "comment" : "Tooltip part: Last error message. Parameter is the error."
+    },
+    "Launch at Login" : {
+      "comment" : "Accessibility description for launch at login icon\nMenu item: Toggle launch at login\nNotification title: Launch at login status changed"
+    },
+    "Launch at Login (macOS 13+)" : {
+      "comment" : "Menu item: Launch at login (disabled for older macOS)"
+    },
+    "Launch at login: %@" : {
+      "comment" : "Log message: Launch at login status change. Parameter is 'Enabling' or 'Disabling'."
+    },
+    "Local .yml File Name" : {
+      "comment" : "Placeholder for config file name in MAMP creation\nPlaceholder for config file name in managed creation"
+    },
+    "Local files are being kept." : {
+      "comment" : "Log message: Local files were kept."
+    },
+    "Local Files Deleted" : {
+      "comment" : "Notification title: Local files deleted"
+    },
+    "Local Port" : {
+      "comment" : "Form field label: Local Port in MAMP creation\nForm field label: Local Port in managed creation"
+    },
+    "Local: %@" : {
+      "comment" : "Tooltip part: Local URL. Parameter is the URL."
+    },
+    "MAMP Action" : {
+      "comment" : "Notification title: MAMP action performed"
+    },
+    "Mamp Config directory path: %@" : {
+      "comment" : "Log message: MAMP config directory path. Parameter is path."
+    },
+    "MAMP Configuration Updated" : {
+      "comment" : "Alert title: MAMP configuration updated"
+    },
+    "MAMP httpd-vhosts.conf file not found." : {
+      "comment" : "Error message: MAMP vhosts file not found"
+    },
+    "MAMP httpd.conf Error" : {
+      "comment" : "Notification title: MAMP httpd.conf error"
+    },
+    "MAMP httpd.conf file not found: %@" : {
+      "comment" : "Error message: MAMP httpd.conf not found. Parameter is path."
+    },
+    "MAMP httpd.conf file not found." : {
+      "comment" : "Error message: MAMP httpd.conf file not found"
+    },
+    "Mamp httpd.conf path: %@" : {
+      "comment" : "Log message: MAMP httpd.conf file path. Parameter is path."
+    },
+    "MAMP httpd.conf read/write error: %@" : {
+      "comment" : "Error message: httpd.conf read/write error. Parameter is error description."
+    },
+    "MAMP httpd.conf Updated" : {
+      "comment" : "Notification title: MAMP httpd.conf updated"
+    },
+    "MAMP Integration" : {
+      "comment" : "Section header for MAMP integration in managed tunnel creation"
+    },
+    "MAMP Management" : {
+      "comment" : "Accessibility description for MAMP management icon\nMenu section header: MAMP Management"
+    },
+    "MAMP script '%@' failed with Exit Code: %d." : {
+      "comment" : "Error detail: MAMP script failed. Parameters are script name and exit code.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MAMP script '%1$@' failed with Exit Code: %2$d."
+          }
+        }
+      }
+    },
+    "MAMP Site" : {
+      "comment" : "Label for MAMP site picker"
+    },
+    "MAMP site directory not found: %@" : {
+      "comment" : "Tooltip: MAMP site directory not found. Parameter is the path."
+    },
+    "MAMP site folder" : {
+      "comment" : "Placeholder for MAMP site folder input in managed creation"
+    },
+    "Mamp Sites directory path: %@" : {
+      "comment" : "Log message: MAMP sites directory path. Parameter is path."
+    },
+    "MAMP start/stop scripts not found.\nPath: %@" : {
+      "comment" : "Tooltip: MAMP scripts not found. Parameter is the path."
+    },
+    "MAMP vHost file has been updated. You may need to restart MAMP servers for the changes to take effect.\n\nWould you like to open the MAMP Apache configuration folder?" : {
+      "comment" : "Alert informative text: MAMP vHost updated, ask to open folder."
+    },
+    "Mamp vHost path: %@" : {
+      "comment" : "Log message: MAMP vHost file path. Parameter is path."
+    },
+    "Managed tunnel status check timer set up with %.1f second interval." : {
+      "comment" : "Log message: Status check timer setup. Parameter is interval in seconds."
+    },
+    "Managed Tunnels" : {
+      "comment" : "Accessibility description for managed tunnels icon"
+    },
+    "Managed Tunnels (via Config)" : {
+      "comment" : "Menu section header: Managed Tunnels"
+    },
+    "N/A" : {
+      "comment" : "Not Applicable short form"
+    },
+    "Name on Cloudflare (no spaces)" : {
+      "comment" : "Placeholder for tunnel name in MAMP creation\nPlaceholder for tunnel name in managed creation"
+    },
+    "New check interval set: %.1f seconds" : {
+      "comment" : "Log message: New check interval set. Parameter is interval in seconds."
+    },
+    "New cloudflared path set: %@" : {
+      "comment" : "Log message: New cloudflared path set. Parameter is the path."
+    },
+    "New Managed Tunnel" : {
+      "comment" : "Accessibility description for new managed tunnel icon"
+    },
+    "New Managed Tunnel (with Config)..." : {
+      "comment" : "Menu item: Create new managed tunnel"
+    },
+    "New managed tunnel found: %@" : {
+      "comment" : "Log message: New managed tunnel discovered. Parameter is tunnel name."
+    },
+    "No" : {
+      "comment" : "Alert button: No"
+    },
+    "No project folder found in MAMP site directory" : {
+      "comment" : "Empty state message: No MAMP projects found in MAMP creation form"
+    },
+    "No running Python application." : {
+      "comment" : "Tooltip: No Python app is running."
+    },
+    "No Tunnels" : {
+      "comment" : "Accessibility description for no tunnels icon"
+    },
+    "No tunnels found" : {
+      "comment" : "Menu item: Displayed when no tunnels are available"
+    },
+    "No, Keep Files" : {
+      "comment" : "Alert button: Keep local files"
+    },
+    "Not found at '%@'. Please correct the path in Settings." : {
+      "comment" : "Notification body: cloudflared not found at path, instruct to fix in settings. Parameter is path."
+    },
+    "Note: This process attempts to automatically update the MAMP vHost file. You will need to restart MAMP." : {
+      "comment" : "Informational note about MAMP vHost update in MAMP creation form"
+    },
+    "Notification response received: %@" : {
+      "comment" : "Log message: Received response to a notification. Parameter is the identifier."
+    },
+    "OK" : {
+      "comment" : "Alert button: OK\nAlert button: OK in MAMP creation form\nAlert button: OK in managed creation form\nButton title in ModernAlertView"
+    },
+    "Open ~/.cloudflared Folder" : {
+      "comment" : "Menu item: Open .cloudflared folder"
+    },
+    "Open Cloudflared Folder" : {
+      "comment" : "Accessibility description for open cloudflared folder icon"
+    },
+    "Open Config" : {
+      "comment" : "Accessibility description for open config icon"
+    },
+    "Open Config File (.yml)" : {
+      "comment" : "Menu item: Open tunnel config file"
+    },
+    "Open File (httpd-vhosts.conf)" : {
+      "comment" : "Menu item: Open MAMP vhosts file"
+    },
+    "Open File (httpd.conf)" : {
+      "comment" : "Menu item: Open MAMP httpd.conf file"
+    },
+    "Open Folder" : {
+      "comment" : "Alert button: Open folder"
+    },
+    "Open httpd.conf File" : {
+      "comment" : "Accessibility description for open httpd.conf file icon"
+    },
+    "Open MAMP Apache Conf Folder" : {
+      "comment" : "Menu item: Open MAMP Apache config folder"
+    },
+    "Open MAMP Config Folder" : {
+      "comment" : "Accessibility description for open MAMP config folder icon"
+    },
+    "Open MAMP Site Directory" : {
+      "comment" : "Button title: Open MAMP site directory in MAMP creation form"
+    },
+    "Open Setup Guide" : {
+      "comment" : "Accessibility description for open setup guide icon"
+    },
+    "Open Setup Guide (PDF)" : {
+      "comment" : "Menu item: Open setup guide PDF"
+    },
+    "Open vHost File" : {
+      "comment" : "Accessibility description for open vhost file icon"
+    },
+    "Opening Setup PDF: %@" : {
+      "comment" : "Log message: Opening setup PDF. Parameter is path."
+    },
+    "Opens MAMP's main Apache configuration file." : {
+      "comment" : "Tooltip: Explains what open httpd.conf file does"
+    },
+    "Opens MAMP's virtual host configuration file." : {
+      "comment" : "Tooltip: Explains what open vhost file does"
+    },
+    "PID: %d" : {
+      "comment" : "Tooltip part: Process ID. Parameter is PID."
+    },
+    "Please correct the cloudflared path in Settings." : {
+      "comment" : "Tooltip: Instructs user to fix cloudflared path in settings"
+    },
+    "Please fill all required fields correctly." : {
+      "comment" : "Error message: Form validation failed in managed creation"
+    },
+    "Please select a valid MAMP site and fill all fields correctly." : {
+      "comment" : "Custom alert message: Form validation failed for MAMP creation"
+    },
+    "Please select MAMP Project Root Directory" : {
+      "comment" : "NSOpenPanel message for selecting MAMP project root in managed creation"
+    },
+    "Port" : {
+      "comment" : "Placeholder for local port input in managed creation"
+    },
+    "Port (e.g., 8888)" : {
+      "comment" : "Placeholder for local port input in MAMP creation"
+    },
+    "Post-operation status verification failed." : {
+      "comment" : "Error message: Launch at login status verification failed."
+    },
+    "Process started or status checked. Check browser if needed." : {
+      "comment" : "Notification body: Cloudflare login process started or status checked."
+    },
+    "Process terminated before URL was found (Code: %d). Check output." : {
+      "comment" : "Error message: Process terminated before URL found. Parameter is exit code."
+    },
+    "Process terminated during startup." : {
+      "comment" : "Error message: Process terminated during startup."
+    },
+    "Process terminated unexpectedly (Code: %d)." : {
+      "comment" : "Error message: Process terminated unexpectedly. Parameter is exit code."
+    },
+    "Process terminated unexpectedly (found in map but not running)." : {
+      "comment" : "Error message: Process found in map but not running."
+    },
+    "Project Root" : {
+      "comment" : "Form field label: Project Root in managed creation\nLabel for project root display"
+    },
+    "Python Application Started" : {
+      "comment" : "Notification title: Python app started"
+    },
+    "Python Panel" : {
+      "comment" : "Accessibility description for Python panel icon\nMenu section header: Python Panel"
+    },
+    "Python project directory not found:\n%@" : {
+      "comment" : "Error message: Python project directory not found. Parameter is the path."
+    },
+    "Python script file not found:\n%@" : {
+      "comment" : "Error message: Python script file not found. Parameter is the path."
+    },
+    "Python script not found: %@" : {
+      "comment" : "Tooltip: Python script not found. Parameter is path."
+    },
+    "Quick Tunnel" : {
+      "comment" : "Accessibility description for quick tunnel icon"
+    },
+    "Quick Tunnel Error" : {
+      "comment" : "Notification title: Quick tunnel error"
+    },
+    "Quick Tunnel Ready" : {
+      "comment" : "Notification title: Quick tunnel is ready"
+    },
+    "Quick tunnel start cancelled." : {
+      "comment" : "Log message: Quick tunnel start cancelled by user."
+    },
+    "Quick Tunnel Start Error" : {
+      "comment" : "Notification title: Error starting quick tunnel"
+    },
+    "Quick tunnel start process submitted, ID: %@" : {
+      "comment" : "Log message: Quick tunnel start submitted. Parameter is tunnel ID."
+    },
+    "Quick Tunnel Stopped" : {
+      "comment" : "Notification title: Quick tunnel stopped"
+    },
+    "Quick Tunnels" : {
+      "comment" : "Accessibility description for quick tunnels icon\nMenu section header: Quick Tunnels"
+    },
+    "Quit" : {
+      "comment" : "Accessibility description for quit icon\nMenu item: Quit application"
+    },
+    "Quit Cloudflared Manager" : {
+      "comment" : "Menu item: Quit application with app name"
+    },
+    "Refresh List" : {
+      "comment" : "Accessibility description for refresh list icon"
+    },
+    "Refresh List (Managed)" : {
+      "comment" : "Menu item: Refresh managed tunnel list"
+    },
+    "Removed config files: %@" : {
+      "comment" : "Log message: Config files removed. Parameter is list of names."
+    },
+    "Route" : {
+      "comment" : "Alert button: Route DNS"
+    },
+    "Route DNS" : {
+      "comment" : "Accessibility description for route DNS icon"
+    },
+    "Route DNS Record" : {
+      "comment" : "Alert title: Route DNS record"
+    },
+    "Route DNS Record..." : {
+      "comment" : "Menu item: Route DNS record for tunnel"
+    },
+    "Running" : {
+      "comment" : "Tunnel status: Running"
+    },
+    "Runs the script with venv: %@" : {
+      "comment" : "Tooltip: Explains running Python script with venv. Parameter is path."
+    },
+    "Script '%@' not found or not executable.\nPath: %@\nCheck your MAMP installation." : {
+      "comment" : "Error message: MAMP script not found or executable. Parameters are script name and path.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Script '%1$@' not found or not executable.\nPath: %2$@\nCheck your MAMP installation."
+          }
+        }
+      }
+    },
+    "Searching for managed tunnels (config files): %@" : {
+      "comment" : "Log message: Searching for managed tunnels. Parameter is directory path."
+    },
+    "Select project root directory" : {
+      "comment" : "Help text for browse button in managed creation"
+    },
+    "Settings" : {
+      "comment" : "Accessibility description for settings icon"
+    },
+    "Settings..." : {
+      "comment" : "Menu item: Open settings window"
+    },
+    "Setup guide PDF file not found." : {
+      "comment" : "Error message: Setup guide PDF not found."
+    },
+    "Shutdown procedures completed." : {
+      "comment" : "Log message: Application termination tasks finished"
+    },
+    "Start" : {
+      "comment" : "Alert button: Start action\nMenu item: Start tunnel"
+    },
+    "Start All Managed" : {
+      "comment" : "Accessibility description for start all managed icon\nMenu item: Start all managed tunnels"
+    },
+    "Start command sent for MAMP servers (Apache & MySQL)." : {
+      "comment" : "Success message for starting MAMP servers"
+    },
+    "Start Error: %@" : {
+      "comment" : "Notification title: Error starting tunnel. Parameter is tunnel name."
+    },
+    "Start MAMP Servers" : {
+      "comment" : "Accessibility description for start MAMP servers icon\nMenu item: Start MAMP servers"
+    },
+    "Start Python App" : {
+      "comment" : "Accessibility description for start Python app icon"
+    },
+    "Start Python Application" : {
+      "comment" : "Menu item: Start Python application"
+    },
+    "Start Quick Tunnel" : {
+      "comment" : "Alert title: Start a quick tunnel"
+    },
+    "Starting..." : {
+      "comment" : "Initial status for quick tunnel error before specific error is found\nTunnel status: Starting"
+    },
+    "Status: %@" : {
+      "comment" : "Tooltip part: Tunnel status. Parameter is status display name."
+    },
+    "Stop" : {
+      "comment" : "Menu item: Stop tunnel"
+    },
+    "Stop All Tunnels" : {
+      "comment" : "Accessibility description for stop all tunnels icon\nMenu item: Stop all tunnels"
+    },
+    "Stop command sent for MAMP servers (Apache & MySQL)." : {
+      "comment" : "Success message for stopping MAMP servers"
+    },
+    "Stop MAMP Servers" : {
+      "comment" : "Accessibility description for stop MAMP servers icon\nMenu item: Stop MAMP servers"
+    },
+    "Stop Python App" : {
+      "comment" : "Accessibility description for stop Python app icon"
+    },
+    "Stop Python Application" : {
+      "comment" : "Menu item: Stop Python application"
+    },
+    "Stop Quick Tunnel" : {
+      "comment" : "Accessibility description for stop quick tunnel icon"
+    },
+    "Stop signal sent for %@." : {
+      "comment" : "Notification body: Stop signal sent for Python script. Parameter is script name."
+    },
+    "Stop This Quick Tunnel" : {
+      "comment" : "Menu item: Stop a specific quick tunnel"
+    },
+    "Stopped" : {
+      "comment" : "Tunnel status: Stopped"
+    },
+    "Stopping Python Application" : {
+      "comment" : "Notification title: Python app stopping"
+    },
+    "Stopping..." : {
+      "comment" : "Tunnel status: Stopping"
+    },
+    "Stops the running application (PID: %d)." : {
+      "comment" : "Tooltip: Explains stopping Python app. Parameter is PID."
+    },
+    "Success" : {
+      "comment" : "Alert title: Success in MAMP creation form\nCustom alert title: Success in MAMP creation"
+    },
+    "Success: DNS record already exists or was updated.\n%@" : {
+      "comment" : "Success message: DNS record already exists or updated. Parameter is command output."
+    },
+    "Success!" : {
+      "comment" : "Alert title: Success in managed creation form"
+    },
+    "Synchronous" : {
+      "comment" : "Synchronous mode for stopping tunnels"
+    },
+    "Termination handler: Tunnel not found in list anymore: %@" : {
+      "comment" : "Log message: Tunnel not found in list during termination. Parameter is config path."
+    },
+    "there should only be 1 non-deleted tunnel named" : {
+      "comment" : "Substring in error message indicating tunnel name ambiguity"
+    },
+    "This action will permanently delete the tunnel from Cloudflare.\n\n⚠️ THIS ACTION CANNOT BE UNDONE! ⚠️\n\nAre you sure?" : {
+      "comment" : "Alert informative text: Warning about permanent deletion of tunnel."
+    },
+    "This feature requires macOS 13 or later." : {
+      "comment" : "Error message: Feature requires macOS 13+"
+    },
+    "Toggling managed tunnel: %@, Current status: %@" : {
+      "comment" : "Log message: Toggling managed tunnel. Parameters are tunnel name and current status.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Toggling managed tunnel: %1$@, Current status: %2$@"
+          }
+        }
+      }
+    },
+    "Tunnel '%@' was deleted from Cloudflare.\nWould you also like to delete the associated local files?\n\n- %@" : {
+      "comment" : "Alert informative text: Ask to delete local files. Parameters are tunnel name and list of files.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tunnel '%1$@' was deleted from Cloudflare.\nWould you also like to delete the associated local files?\n\n- %2$@"
+          }
+        }
+      }
+    },
+    "Tunnel '%1$@' and configuration '%2$@' created successfully." : {
+      "comment" : "Success message: Tunnel and config created. Parameters are tunnel name, config file name in managed creation."
+    },
+    "Tunnel '%1$@' and configuration '%2$@' for MAMP site '%3$@' created successfully.\n\nMAMP Apache configuration files (vhost and httpd.conf) were attempted to be updated.\n\n⚠️ You MUST restart MAMP servers for changes to take effect!" : {
+      "comment" : "Custom alert message: MAMP tunnel creation successful. Parameters are tunnel name, config file name, MAMP site name."
+    },
+    "Tunnel could not be deleted due to an inconsistency on Cloudflare's side (did not use --force).\n\nError Message: '%@'\n\nPlease check and manually delete this tunnel via the Cloudflare Dashboard." : {
+      "comment" : "Error message: Tunnel deletion failed due to Cloudflare inconsistency, --force not used. Parameters are error string."
+    },
+    "Tunnel created but JSON credential file not found at:\n%@\n\nCheck cloudflared output:\n%@" : {
+      "comment" : "Error message: Tunnel created but JSON file not found, with output. Parameters are path and cloudflared output.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tunnel created but JSON credential file not found at:\n%1$@\n\nCheck cloudflared output:\n%2$@"
+          }
+        }
+      }
+    },
+    "Tunnel created but UUID (%@) or JSON path (%@) not found in output:\n%@" : {
+      "comment" : "Error message: Tunnel created but UUID or JSON path missing from output. Parameters are UUID (or 'none'), JSON path (or 'none'), and output string.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tunnel created but UUID (%1$@) or JSON path (%2$@) not found in output:\n%3$@"
+          }
+        }
+      }
+    },
+    "Tunnel created, but configuration/MAMP error:\n%@" : {
+      "comment" : "Custom alert message: Tunnel created but config/MAMP error. Parameter is error description in MAMP creation.\nError message: Tunnel created but config/MAMP error. Parameter is error description in managed creation."
+    },
+    "Tunnel Deleted" : {
+      "comment" : "Notification title: Tunnel deleted successfully"
+    },
+    "Tunnel Details" : {
+      "comment" : "Section header for tunnel details in MAMP creation form\nSection header for tunnel details in managed tunnel creation"
+    },
+    "Tunnel Error: %@" : {
+      "comment" : "Notification title: Tunnel error. Parameter is tunnel name."
+    },
+    "Tunnel Name" : {
+      "comment" : "Form field label: Tunnel Name in MAMP creation\nForm field label: Tunnel Name in managed creation"
+    },
+    "Tunnel name cannot contain spaces and cannot be empty." : {
+      "comment" : "Error message: Invalid tunnel name."
+    },
+    "tunnel not found" : {
+      "comment" : "Substring in error message for tunnel not found"
+    },
+    "Tunnel Started" : {
+      "comment" : "Notification title: Tunnel has been started"
+    },
+    "Tunnel Status" : {
+      "comment" : "Accessibility description for tunnel status icon"
+    },
+    "Tunnel Stopped" : {
+      "comment" : "Notification title: Tunnel has been stopped"
+    },
+    "Tunnel URL is not available yet." : {
+      "comment" : "Notification body: Tunnel URL not yet available for copying"
+    },
+    "Unknown Cloudflare login error (Code: %d)" : {
+      "comment" : "Error message: Unknown Cloudflare login error. Parameter is exit code."
+    },
+    "Unknown error creating tunnel (Code: %d). Are you logged into your Cloudflare account?" : {
+      "comment" : "Error message: Unknown error creating tunnel. Parameter is exit code."
+    },
+    "Unknown error deleting tunnel (Exit Code: %d)." : {
+      "comment" : "Error message: Unknown error deleting tunnel. Parameter is exit code."
+    },
+    "Unknown error." : {
+      "comment" : "Default unknown error message."
+    },
+    "Update MAMP Apache vHost File" : {
+      "comment" : "Toggle label for updating MAMP vHost file in managed creation"
+    },
+    "Updated managed tunnel list: %@" : {
+      "comment" : "Log message: Updated list of managed tunnels. Parameter is list of names."
+    },
+    "URL Copied" : {
+      "comment" : "Notification title: URL copied to clipboard"
+    },
+    "UUID: (Could not read from Config)" : {
+      "comment" : "Tooltip part: Tunnel UUID could not be read from config."
+    },
+    "UUID: %@" : {
+      "comment" : "Tooltip part: Tunnel UUID. Parameter is the UUID."
+    },
+    "Write permission error" : {
+      "comment" : "Substring to check for write permission error in configError in MAMP creation"
+    },
+    "Write permission error: MAMP httpd.conf file could not be updated (%@). Check permissions." : {
+      "comment" : "Error message: Write permission error for httpd.conf. Parameter is path."
+    },
+    "Write permission error: MAMP vHost file could not be updated (%@). Please check file permissions or add manually.\n%@" : {
+      "comment" : "Error message: Write permission error for MAMP vHost. Parameters are path and error.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Write permission error: MAMP vHost file could not be updated (%1$@). Please check file permissions or add manually.\n%2$@"
+          }
+        }
+      }
+    },
+    "Yes, Delete Local Files" : {
+      "comment" : "Alert button: Confirm delete local files"
+    },
+    "Yes, Permanently Delete" : {
+      "comment" : "Alert button: Confirm permanent deletion"
+    },
+    "You have successfully logged in" : {
+      "comment" : "Substring in login success message"
+    },
+    "You may need to create the DNS record in Cloudflare." : {
+      "comment" : "Help text for hostname field in MAMP creation"
+    }
+  },
+  "version" : "1.0"
+}

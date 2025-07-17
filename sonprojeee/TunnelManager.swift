@@ -1074,7 +1074,7 @@ class TunnelManager: ObservableObject {
                              print(String(format: NSLocalizedString("   Error message set: %@", comment: "Log message: Error message set for quick tunnel. Parameter is error message."), finalError))
                              // Error notification
                              let errorTitle = NSLocalizedString("Quick Tunnel Error", comment: "Notification title: Quick tunnel error")
-                             let errorBody = String(format: NSLocalizedString("%1$@\n%2$@...", comment: "Notification body: Quick tunnel error. Parameters are local URL and truncated error message."), localURL, finalError.prefix(100))
+                             let errorBody = String(format: NSLocalizedString("%1$@\n%2$@...", comment: "Notification body: Quick tunnel error. Parameters are local URL and truncated error message."), localURL, finalError.prefix(100) as CVarArg)
                              self.postUserNotification(identifier: "quick_fail_\(tunnelID)", title: errorTitle, body: errorBody)
                          } else if wasStoppedIntentionally {
                               print(String(format: NSLocalizedString("   Quick tunnel stopped or finished normally (%@).", comment: "Log message: Quick tunnel stopped or finished normally. Parameter is tunnel ID."), tunnelID.uuidString))
@@ -1539,11 +1539,11 @@ class TunnelManager: ObservableObject {
                  // Verify state *after* operation
                  let finalStateEnabled = SMAppService.mainApp.status == .enabled
                  if finalStateEnabled == newStateEnabled {
-                     print(String(format: NSLocalizedString("   ✅ Launch at login status updated: %@", comment: "Log message: Launch at login status updated successfully. Parameter is new status (true/false)."), String(describing: finalStateEnabled))))
+                     print(String(format: NSLocalizedString("   ✅ Launch at login status updated: %@", comment: "Log message: Launch at login status updated successfully. Parameter is new status (true/false)."), String(describing: finalStateEnabled)))
                      completion(.success(finalStateEnabled))
                  } else {
-                      print(String(format: NSLocalizedString("❌ Launch at login status could not be changed (expected: %@, result: %@).", comment: "Log message: Failed to change launch at login status. Parameters are expected status and actual status."), String(describing: newStateEnabled), String(describing: finalStateEnabled))))
-                      completion(.failure(NSError(domain: "ServiceManagement", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Post-operation status verification failed.", comment: "Error message: Launch at login status verification failed.")])))
+                     print(String(format: NSLocalizedString("❌ Launch at login status could not be changed (expected: %@, result: %@).", comment: "Log message: Failed to change launch at login status. Parameters are expected status and actual status."), String(describing: newStateEnabled), String(describing: finalStateEnabled)))
+                     completion(.failure(NSError(domain: "ServiceManagement", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Post-operation status verification failed.", comment: "Error message: Launch at login status verification failed.")])))
                  }
              } catch {
                  print(String(format: NSLocalizedString("❌ Could not change launch at login: %@", comment: "Log message: Error changing launch at login. Parameter is error."), error.localizedDescription))

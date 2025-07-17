@@ -452,7 +452,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 else { toolTipParts.append(NSLocalizedString("UUID: (Could not read from Config)", comment: "Tooltip part: Tunnel UUID could not be read from config.")) }
                 if let path = tunnel.configPath { toolTipParts.append(String(format: NSLocalizedString("Config: %@", comment: "Tooltip part: Config file path. Parameter is the path."), (path as NSString).abbreviatingWithTildeInPath)) }
                 if let pid = tunnel.processIdentifier { toolTipParts.append(String(format: NSLocalizedString("PID: %d", comment: "Tooltip part: Process ID. Parameter is PID."), pid)) }
-                if let err = tunnel.lastError, !err.isEmpty { toolTipParts.append(String(format: NSLocalizedString("Last Error: %@", comment: "Tooltip part: Last error message. Parameter is the error."), err.split(separator: "\n").first ?? ""))}
+                if let err = tunnel.lastError, !err.isEmpty {
+                    toolTipParts.append(String(format: NSLocalizedString("Last Error: %@", comment: "Tooltip part: Last error message. Parameter is the error."), String(err.split(separator: "\n").first ?? "")))
+                }
                 mainMenuItem.toolTip = toolTipParts.joined(separator: "\n")
                 
                 let subMenu = NSMenu()
