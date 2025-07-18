@@ -2,14 +2,25 @@ import Foundation // For UUID, pid_t
 
 // Represents the possible states of a tunnel
 enum TunnelStatus: String, CaseIterable {
-    case running = "Çalışıyor"
-    case stopped = "Durduruldu"
-    case starting = "Başlatılıyor..."
-    case stopping = "Durduruluyor..."
-    case error = "Hata"
+    case running
+    case stopped
+    case starting
+    case stopping
+    case error
 
     var displayName: String {
-        return self.rawValue
+        switch self {
+        case .running:
+            return NSLocalizedString("Running", comment: "Tunnel status: Running")
+        case .stopped:
+            return NSLocalizedString("Stopped", comment: "Tunnel status: Stopped")
+        case .starting:
+            return NSLocalizedString("Starting...", comment: "Tunnel status: Starting")
+        case .stopping:
+            return NSLocalizedString("Stopping...", comment: "Tunnel status: Stopping")
+        case .error:
+            return NSLocalizedString("Error", comment: "Tunnel status: Error")
+        }
     }
 }
 

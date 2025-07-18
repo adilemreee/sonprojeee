@@ -27,7 +27,7 @@ class TunnelManager: ObservableObject {
     @Published var cloudflaredExecutablePath: String = UserDefaults.standard.string(forKey: "cloudflaredPath") ?? "/opt/homebrew/bin/cloudflared" {
         didSet {
             UserDefaults.standard.set(cloudflaredExecutablePath, forKey: "cloudflaredPath")
-            print("Yeni cloudflared yolu ayarlandı: \(cloudflaredExecutablePath)")
+            print(String(format: NSLocalizedString("New cloudflared path set: %@", comment: "Log message: New cloudflared path set. Parameter is the path."), cloudflaredExecutablePath))
             checkCloudflaredExecutable() // Validate the new path
         }
     }
@@ -36,7 +36,7 @@ class TunnelManager: ObservableObject {
              if checkInterval < 5 { checkInterval = 5 } // Minimum interval 5s
              UserDefaults.standard.set(checkInterval, forKey: "checkInterval")
              setupStatusCheckTimer() // Restart timer with new interval
-             print("Yeni kontrol aralığı ayarlandı: \(checkInterval) saniye")
+             print(String(format: NSLocalizedString("New check interval set: %.1f seconds", comment: "Log message: New check interval set. Parameter is interval in seconds."), checkInterval))
          }
      }
 
@@ -65,12 +65,12 @@ class TunnelManager: ObservableObject {
         mampConfigDirectoryPath = "/Applications/MAMP/conf/apache"
         mampSitesDirectoryPath = "/Applications/MAMP/sites" // Default MAMP htdocs
         mampVHostConfPath = "/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf"
-        mampHttpdConfPath = "/Applications/MAMP/conf/apache/httpd.conf" // <<< YENİ SABİTİ ATA >>>
-        print("Cloudflared directory path: \(cloudflaredDirectoryPath)")
-        print("Mamp Config directory path: \(mampConfigDirectoryPath)")
-        print("Mamp Sites directory path: \(mampSitesDirectoryPath)")
-        print("Mamp vHost path: \(mampVHostConfPath)")
-        print("Mamp httpd.conf path: \(mampHttpdConfPath)") // <<< LOG EKLE (opsiyonel) >>>
+        mampHttpdConfPath = "/Applications/MAMP/conf/apache/httpd.conf" // <<< Assign NEW CONSTANT >>>
+        print(String(format: NSLocalizedString("Cloudflared directory path: %@", comment: "Log message: Cloudflared directory path. Parameter is path."), cloudflaredDirectoryPath))
+        print(String(format: NSLocalizedString("Mamp Config directory path: %@", comment: "Log message: MAMP config directory path. Parameter is path."), mampConfigDirectoryPath))
+        print(String(format: NSLocalizedString("Mamp Sites directory path: %@", comment: "Log message: MAMP sites directory path. Parameter is path."), mampSitesDirectoryPath))
+        print(String(format: NSLocalizedString("Mamp vHost path: %@", comment: "Log message: MAMP vHost file path. Parameter is path."), mampVHostConfPath))
+        print(String(format: NSLocalizedString("Mamp httpd.conf path: %@", comment: "Log message: MAMP httpd.conf file path. Parameter is path."), mampHttpdConfPath)) // <<< ADD LOG (optional) >>>
         // Initial check for cloudflared executable
         checkCloudflaredExecutable()
 
@@ -102,8 +102,10 @@ class TunnelManager: ObservableObject {
 
     func checkCloudflaredExecutable() {
          if !FileManager.default.fileExists(atPath: cloudflaredExecutablePath) {
-             print("⚠️ UYARI: cloudflared şurada bulunamadı: \(cloudflaredExecutablePath)")
-             postUserNotification(identifier:"cloudflared_not_found", title: "Cloudflared Bulunamadı", body: "'\(cloudflaredExecutablePath)' konumunda bulunamadı. Lütfen Ayarlar'dan yolu düzeltin.")
+             print(String(format: NSLocalizedString("⚠️ WARNING: cloudflared not found at: %@", comment: "Log message: cloudflared executable not found warning. Parameter is path."), cloudflaredExecutablePath))
+             let errorTitle = NSLocalizedString("Cloudflared Not Found", comment: "Notification title: cloudflared executable not found")
+             let errorBody = String(format: NSLocalizedString("Not found at '%@'. Please correct the path in Settings.", comment: "Notification body: cloudflared not found at path, instruct to fix in settings. Parameter is path."), cloudflaredExecutablePath)
+             postUserNotification(identifier:"cloudflared_not_found", title: errorTitle, body: errorBody)
          }
      }
 
@@ -114,32 +116,36 @@ class TunnelManager: ObservableObject {
              self?.checkAllManagedTunnelStatuses()
         }
         RunLoop.current.add(statusCheckTimer!, forMode: .common)
-        print("Yönetilen tünel durum kontrol timer'ı \(checkInterval) saniye aralıkla kuruldu.")
+        print(String(format: NSLocalizedString("Managed tunnel status check timer set up with %.1f second interval.", comment: "Log message: Status check timer setup. Parameter is interval in seconds."), checkInterval))
     }
 
     // MARK: - Tunnel Discovery (Managed Tunnels from Config Files)
     func findManagedTunnels() {
-        print("Yönetilen tüneller aranıyor (config dosyaları): \(cloudflaredDirectoryPath)")
+        print(String(format: NSLocalizedString("Searching for managed tunnels (config files): %@", comment: "Log message: Searching for managed tunnels. Parameter is directory path."), cloudflaredDirectoryPath))
         var discoveredTunnelsDict: [String: TunnelInfo] = [:]
         let fileManager = FileManager.default
 
         var isDirectory: ObjCBool = false
         if !fileManager.fileExists(atPath: cloudflaredDirectoryPath, isDirectory: &isDirectory) {
-            print("ℹ️ \(cloudflaredDirectoryPath) dizini bulunamadı, oluşturuluyor...")
+            print(String(format: NSLocalizedString("ℹ️ Directory %@ not found, creating...", comment: "Log message: Directory not found, creating it. Parameter is path."), cloudflaredDirectoryPath))
             do {
                 try fileManager.createDirectory(atPath: cloudflaredDirectoryPath, withIntermediateDirectories: true, attributes: nil)
-                print("   ✅ Dizin oluşturuldu.")
+                print(NSLocalizedString("   ✅ Directory created.", comment: "Log message: Directory created successfully."))
                 isDirectory = true // Set local variable after successful creation
             } catch {
-                print("❌ Hata: \(cloudflaredDirectoryPath) dizini oluşturulamadı: \(error)")
+                print(String(format: NSLocalizedString("❌ Error: Could not create directory %@: %@", comment: "Log message: Error creating directory. Parameters are path and error."), cloudflaredDirectoryPath, error.localizedDescription))
                 DispatchQueue.main.async { self.tunnels.removeAll { $0.isManaged } }
-                postUserNotification(identifier:"cf_dir_create_error", title: "Cloudflared Dizini Hatası", body: "'\(cloudflaredDirectoryPath)' oluşturulamadı veya erişilemedi.")
+                let errorTitle = NSLocalizedString("Cloudflared Directory Error", comment: "Notification title: Error with cloudflared directory")
+                let errorBody = String(format: NSLocalizedString("Could not create or access '%@'.", comment: "Notification body: Failed to create/access cloudflared directory. Parameter is path."), cloudflaredDirectoryPath)
+                postUserNotification(identifier:"cf_dir_create_error", title: errorTitle, body: errorBody)
                 return
             }
         } else if !isDirectory.boolValue {
-             print("❌ Hata: \(cloudflaredDirectoryPath) bir dizin değil.")
+             print(String(format: NSLocalizedString("❌ Error: %@ is not a directory.", comment: "Log message: Path is not a directory. Parameter is path."), cloudflaredDirectoryPath))
              DispatchQueue.main.async { self.tunnels.removeAll { $0.isManaged } }
-             postUserNotification(identifier:"cf_dir_not_dir", title: "Cloudflared Yolu Hatalı", body: "'\(cloudflaredDirectoryPath)' bir dizin değil.")
+             let errorTitle = NSLocalizedString("Cloudflared Path Error", comment: "Notification title: Error with cloudflared path")
+             let errorBody = String(format: NSLocalizedString("'%@' is not a directory.", comment: "Notification body: Path is not a directory. Parameter is path."), cloudflaredDirectoryPath)
+             postUserNotification(identifier:"cf_dir_not_dir", title: errorTitle, body: errorBody)
              return
         }
 
@@ -159,8 +165,10 @@ class TunnelManager: ObservableObject {
                 }
             }
         } catch {
-            print("❌ Hata: \(cloudflaredDirectoryPath) dizini okunurken hata oluştu: \(error)")
-            postUserNotification(identifier:"cf_dir_read_error", title: "Dizin Okuma Hatası", body: "'\(cloudflaredDirectoryPath)' okunurken hata oluştu.")
+            print(String(format: NSLocalizedString("❌ Error: Error reading directory %@: %@", comment: "Log message: Error reading directory. Parameters are path and error."), cloudflaredDirectoryPath, error.localizedDescription))
+            let errorTitle = NSLocalizedString("Directory Read Error", comment: "Notification title: Error reading directory")
+            let errorBody = String(format: NSLocalizedString("Error reading '%@'.", comment: "Notification body: Error reading directory. Parameter is path."), cloudflaredDirectoryPath)
+            postUserNotification(identifier:"cf_dir_read_error", title: errorTitle, body: errorBody)
             // Don't clear tunnels here, could be temporary.
         }
 
@@ -179,7 +187,7 @@ class TunnelManager: ObservableObject {
                      existingTunnel.uuidFromConfig = discoveredTunnel.uuidFromConfig
                      updatedManagedTunnels.append(existingTunnel)
                  } else {
-                     print("Yeni yönetilen tünel bulundu: \(discoveredTunnel.name)")
+                     print(String(format: NSLocalizedString("New managed tunnel found: %@", comment: "Log message: New managed tunnel discovered. Parameter is tunnel name."), discoveredTunnel.name))
                      updatedManagedTunnels.append(discoveredTunnel)
                  }
              }
@@ -191,17 +199,17 @@ class TunnelManager: ObservableObject {
              }
 
              if !removedTunnels.isEmpty {
-                 print("Kaldırılan config dosyaları: \(removedTunnels.map { $0.name })")
+                 print(String(format: NSLocalizedString("Removed config files: %@", comment: "Log message: Config files removed. Parameter is list of names."), removedTunnels.map { $0.name }.joined(separator: ", ")))
                  for removedTunnel in removedTunnels {
                       if let configPath = removedTunnel.configPath, self.runningManagedProcesses[configPath] != nil {
-                           print("   Otomatik durduruluyor: \(removedTunnel.name)")
+                           print(String(format: NSLocalizedString("   Auto-stopping: %@", comment: "Log message: Auto-stopping tunnel. Parameter is tunnel name."), removedTunnel.name))
                            self.stopManagedTunnel(removedTunnel, synchronous: true) // Stop synchronously on file removal
                       }
                  }
              }
 
              self.tunnels = updatedManagedTunnels.sorted { $0.name.lowercased() < $1.name.lowercased() }
-             print("Güncel yönetilen tünel listesi: \(self.tunnels.map { $0.name })")
+             print(String(format: NSLocalizedString("Updated managed tunnel list: %@", comment: "Log message: Updated list of managed tunnels. Parameter is list of names."), self.tunnels.map { $0.name }.joined(separator: ", ")))
              self.checkAllManagedTunnelStatuses(forceCheck: true)
          }
     }
@@ -209,19 +217,19 @@ class TunnelManager: ObservableObject {
     // MARK: - Tunnel Control (Start/Stop/Toggle - Managed Only)
     func toggleManagedTunnel(_ tunnel: TunnelInfo) {
         guard tunnel.isManaged, let configPath = tunnel.configPath else {
-            print("❌ Hata: Yalnızca yapılandırma dosyası olan yönetilen tüneller değiştirilebilir: \(tunnel.name)")
+            print(String(format: NSLocalizedString("❌ Error: Only managed tunnels with a config file can be toggled: %@", comment: "Log message: Error toggling tunnel without config. Parameter is tunnel name."), tunnel.name))
             return
         }
         guard let index = tunnels.firstIndex(where: { $0.id == tunnel.id }) else {
-             print("❌ Hata: Tünel bulunamadı: \(tunnel.name)")
+             print(String(format: NSLocalizedString("❌ Error: Tunnel not found: %@", comment: "Log message: Error, tunnel not found for toggle. Parameter is tunnel name."), tunnel.name))
              return
         }
         let currentStatus = tunnels[index].status
-        print("Toggling managed tunnel: \(tunnel.name), Current status: \(currentStatus)")
+        print(String(format: NSLocalizedString("Toggling managed tunnel: %@, Current status: %@", comment: "Log message: Toggling managed tunnel. Parameters are tunnel name and current status."), tunnel.name, currentStatus.displayName))
         switch currentStatus {
         case .running, .starting: stopManagedTunnel(tunnels[index])
         case .stopped, .error: startManagedTunnel(tunnels[index])
-        case .stopping: print("\(tunnel.name) zaten durduruluyor.")
+        case .stopping: print(String(format: NSLocalizedString("%@ is already stopping.", comment: "Log message: Tunnel is already in the process of stopping. Parameter is tunnel name."), tunnel.name))
         }
     }
 
@@ -230,21 +238,23 @@ class TunnelManager: ObservableObject {
         guard let index = tunnels.firstIndex(where: { $0.id == tunnel.id }) else { return }
 
         guard runningManagedProcesses[configPath] == nil, tunnels[index].status != .running, tunnels[index].status != .starting else {
-             print("ℹ️ \(tunnel.name) zaten çalışıyor veya başlatılıyor.")
+             print(String(format: NSLocalizedString("ℹ️ %@ is already running or starting.", comment: "Log message: Tunnel already running/starting. Parameter is tunnel name."), tunnel.name))
              return
         }
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
              DispatchQueue.main.async {
                  if self.tunnels.indices.contains(index) {
                      self.tunnels[index].status = .error
-                     self.tunnels[index].lastError = "cloudflared yürütülebilir dosyası bulunamadı: \(self.cloudflaredExecutablePath)"
+                     self.tunnels[index].lastError = String(format: NSLocalizedString("cloudflared executable not found: %@", comment: "Error message: cloudflared executable not found. Parameter is path."), self.cloudflaredExecutablePath)
                  }
              }
-            postUserNotification(identifier:"start_fail_noexec_\(tunnel.id)", title: "Başlatma Hatası: \(tunnel.name)", body: "cloudflared yürütülebilir dosyası bulunamadı.")
+            let errorTitle = String(format: NSLocalizedString("Start Error: %@", comment: "Notification title: Error starting tunnel. Parameter is tunnel name."), tunnel.name)
+            let errorBody = NSLocalizedString("cloudflared executable not found.", comment: "Notification body: cloudflared executable not found for starting tunnel.")
+            postUserNotification(identifier:"start_fail_noexec_\(tunnel.id)", title: errorTitle, body: errorBody)
             return
         }
 
-        print("▶️ Yönetilen tünel \(tunnel.name) başlatılıyor...")
+        print(String(format: NSLocalizedString("▶️ Starting managed tunnel %@...", comment: "Log message: Starting managed tunnel. Parameter is tunnel name."), tunnel.name))
         DispatchQueue.main.async {
             if self.tunnels.indices.contains(index) {
                 self.tunnels[index].status = .starting
@@ -284,21 +294,21 @@ class TunnelManager: ObservableObject {
              DispatchQueue.main.async {
                  guard let self = self else { return }
                  guard let idx = self.tunnels.firstIndex(where: { $0.configPath == configPath }) else {
-                     print("Termination handler: Tunnel not found in list anymore: \(configPath)")
+                     print(String(format: NSLocalizedString("Termination handler: Tunnel not found in list anymore: %@", comment: "Log message: Tunnel not found in list during termination. Parameter is config path."), configPath))
                      self.runningManagedProcesses.removeValue(forKey: configPath); return
                  }
 
                  let status = terminatedProcess.terminationStatus
                  let reason = terminatedProcess.terminationReason
-                 print("⏹️ Yönetilen tünel \(self.tunnels[idx].name) bitti. Kod: \(status), Neden: \(reason == .exit ? "Exit" : "Signal")")
+                 print(String(format: NSLocalizedString("⏹️ Managed tunnel %@ finished. Code: %d, Reason: %@", comment: "Log message: Managed tunnel finished. Parameters are tunnel name, exit code, exit reason."), self.tunnels[idx].name, status, (reason == .exit ? "Exit" : "Signal")))
                  // if !finalOutputString.isEmpty { /* print("   Output: \(finalOutputString)") */ } // Usually logs only
-                 if !finalErrorString.isEmpty { print("   Error: \(finalErrorString)") }
+                 if !finalErrorString.isEmpty { print(String(format: NSLocalizedString("   Error: %@", comment: "Log message: Error output from finished process. Parameter is error string."), finalErrorString)) }
 
                  let wasStopping = self.tunnels[idx].status == .stopping
                  let wasStoppedIntentionally = self.runningManagedProcesses[configPath] == nil // If not in map, assume intentional stop
 
                  if self.runningManagedProcesses[configPath] != nil {
-                     print("   Termination handler removing \(self.tunnels[idx].name) from running map (unexpected termination).")
+                     print(String(format: NSLocalizedString("   Termination handler removing %@ from running map (unexpected termination).", comment: "Log message: Removing tunnel from running map due to unexpected termination. Parameter is tunnel name."), self.tunnels[idx].name))
                      self.runningManagedProcesses.removeValue(forKey: configPath)
                  }
 
@@ -309,16 +319,20 @@ class TunnelManager: ObservableObject {
                          self.tunnels[idx].status = .stopped
                          self.tunnels[idx].lastError = nil
                          if !wasStopping { // Notify only if stop wasn't already in progress UI-wise
-                             print("   Tünel durduruldu (termination handler).")
-                             self.postUserNotification(identifier:"stopped_\(self.tunnels[idx].id)", title: "Tünel Durduruldu", body: "'\(self.tunnels[idx].name)' başarıyla durduruldu.")
+                             print(NSLocalizedString("   Tunnel stopped (termination handler).", comment: "Log message: Tunnel stopped via termination handler."))
+                            let notificationTitle = NSLocalizedString("Tunnel Stopped", comment: "Notification title: Tunnel has been stopped")
+                            let notificationBody = String(format: NSLocalizedString("'%@' was successfully stopped.", comment: "Notification body: Tunnel successfully stopped. Parameter is tunnel name."), self.tunnels[idx].name)
+                            self.postUserNotification(identifier:"stopped_\(self.tunnels[idx].id)", title: notificationTitle, body: notificationBody)
                          }
                      } else { // Unintentional termination
                          self.tunnels[idx].status = .error
-                         let errorMessage = finalErrorString.isEmpty ? "İşlem beklenmedik şekilde sonlandı (Kod: \(status))." : finalErrorString
+                         let errorMessage = finalErrorString.isEmpty ? String(format: NSLocalizedString("Process terminated unexpectedly (Code: %d).", comment: "Error message: Process terminated unexpectedly. Parameter is exit code."), status) : finalErrorString
                          self.tunnels[idx].lastError = errorMessage.split(separator: "\n").prefix(3).joined(separator: "\n")
 
-                         print("   Hata: Tünel beklenmedik şekilde sonlandı.")
-                         self.postUserNotification(identifier:"error_\(self.tunnels[idx].id)", title: "Tünel Hatası: \(self.tunnels[idx].name)", body: self.tunnels[idx].lastError ?? "Bilinmeyen hata.")
+                         print(NSLocalizedString("   Error: Tunnel terminated unexpectedly.", comment: "Log message: Tunnel terminated unexpectedly."))
+                         let errorTitle = String(format: NSLocalizedString("Tunnel Error: %@", comment: "Notification title: Tunnel error. Parameter is tunnel name."), self.tunnels[idx].name)
+                         let errorBody = self.tunnels[idx].lastError ?? NSLocalizedString("Unknown error.", comment: "Default unknown error message.")
+                         self.postUserNotification(identifier:"error_\(self.tunnels[idx].id)", title: errorTitle, body: errorBody)
                      }
                  }
             } // End DispatchQueue.main.async
@@ -333,19 +347,21 @@ class TunnelManager: ObservableObject {
                     self.tunnels[index].processIdentifier = pid
                  }
              }
-            print("   Başlatıldı. PID: \(pid)")
+            print(String(format: NSLocalizedString("   Started. PID: %d", comment: "Log message: Tunnel process started. Parameter is PID."), pid))
              DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                  guard let self = self else { return }
                  if let index = self.tunnels.firstIndex(where: { $0.id == tunnel.id }), self.tunnels[index].status == .starting {
                      if let runningProcess = self.runningManagedProcesses[configPath], runningProcess.isRunning {
                          self.tunnels[index].status = .running
-                         print("   Durum güncellendi -> Çalışıyor (\(self.tunnels[index].name))")
-                         self.postUserNotification(identifier:"started_\(tunnel.id)", title: "Tünel Başlatıldı", body: "'\(tunnel.name)' başarıyla başlatıldı.")
+                         print(String(format: NSLocalizedString("   Status updated -> Running (%@)", comment: "Log message: Tunnel status updated to running. Parameter is tunnel name."), self.tunnels[index].name))
+                         let notificationTitle = NSLocalizedString("Tunnel Started", comment: "Notification title: Tunnel has been started")
+                         let notificationBody = String(format: NSLocalizedString("'%@' was successfully started.", comment: "Notification body: Tunnel successfully started. Parameter is tunnel name."), tunnel.name)
+                         self.postUserNotification(identifier:"started_\(tunnel.id)", title: notificationTitle, body: notificationBody)
                      } else {
-                         print("   Başlatma sırasında tünel sonlandı (\(self.tunnels[index].name)). Durum -> Hata.")
+                         print(String(format: NSLocalizedString("   Tunnel terminated during startup (%@). Status -> Error.", comment: "Log message: Tunnel terminated during startup. Parameter is tunnel name."), self.tunnels[index].name))
                          self.tunnels[index].status = .error
                          if self.tunnels[index].lastError == nil {
-                             self.tunnels[index].lastError = "Başlatma sırasında işlem sonlandı."
+                             self.tunnels[index].lastError = NSLocalizedString("Process terminated during startup.", comment: "Error message: Process terminated during startup.")
                          }
                          self.runningManagedProcesses.removeValue(forKey: configPath) // Ensure removed
                      }
@@ -356,13 +372,15 @@ class TunnelManager: ObservableObject {
                  if let index = self.tunnels.firstIndex(where: { $0.id == tunnel.id }) {
                     self.tunnels[index].status = .error;
                     self.tunnels[index].processIdentifier = nil
-                    self.tunnels[index].lastError = "İşlem başlatılamadı: \(error.localizedDescription)"
+                    self.tunnels[index].lastError = String(format: NSLocalizedString("Failed to start process: %@", comment: "Error message: Failed to start process. Parameter is error description."), error.localizedDescription)
                  }
                  outputPipe.fileHandleForReading.readabilityHandler = nil // Cleanup handlers on failure
                  errorPipe.fileHandleForReading.readabilityHandler = nil
              }
             runningManagedProcesses.removeValue(forKey: configPath) // Remove if run fails
-            postUserNotification(identifier:"start_fail_run_\(tunnel.id)", title: "Başlatma Hatası: \(tunnel.name)", body: "İşlem başlatılamadı: \(error.localizedDescription)")
+            let errorTitle = String(format: NSLocalizedString("Start Error: %@", comment: "Notification title: Error starting tunnel. Parameter is tunnel name."), tunnel.name)
+            let errorBody = String(format: NSLocalizedString("Failed to start process: %@", comment: "Notification body: Failed to start tunnel process. Parameter is error description."), error.localizedDescription)
+            postUserNotification(identifier:"start_fail_run_\(tunnel.id)", title: errorTitle, body: errorBody)
         }
     }
 
@@ -384,7 +402,7 @@ class TunnelManager: ObservableObject {
         guard let process = runningManagedProcesses[configPath] else {
              DispatchQueue.main.async {
                  if self.tunnels.indices.contains(index) && [.running, .stopping, .starting].contains(self.tunnels[index].status) {
-                     print("⚠️ Durdurma: \(tunnel.name) işlemi haritada değil, durum düzeltiliyor -> Durduruldu")
+                     print(String(format: NSLocalizedString("⚠️ Stopping: %@ process not in map, correcting status -> Stopped", comment: "Log message: Correcting status for tunnel process not in map. Parameter is tunnel name."), tunnel.name))
                      self.tunnels[index].status = .stopped
                      self.tunnels[index].processIdentifier = nil
                      self.tunnels[index].lastError = nil
@@ -394,11 +412,11 @@ class TunnelManager: ObservableObject {
         }
 
         if tunnels[index].status == .stopping {
-            print("ℹ️ \(tunnel.name) zaten durduruluyor.")
+            print(String(format: NSLocalizedString("ℹ️ %@ is already stopping.", comment: "Log message: Tunnel is already in the process of stopping. Parameter is tunnel name."), tunnel.name))
             return
         }
 
-        print("🛑 Yönetilen tünel \(tunnel.name) durduruluyor...")
+        print(String(format: NSLocalizedString("🛑 Stopping managed tunnel %@...", comment: "Log message: Stopping managed tunnel. Parameter is tunnel name."), tunnel.name))
         DispatchQueue.main.async {
             if self.tunnels.indices.contains(index) {
                 self.tunnels[index].status = .stopping
@@ -420,9 +438,9 @@ class TunnelManager: ObservableObject {
                            self.tunnels[idx].status = .stopped
                            self.tunnels[idx].processIdentifier = nil
                            if didExit {
-                               print("   \(tunnel.name) senkron olarak durduruldu (SIGTERM ile). Durum -> Durduruldu.")
+                               print(String(format: NSLocalizedString("   %@ stopped synchronously (with SIGTERM). Status -> Stopped.", comment: "Log message: Tunnel stopped synchronously. Parameter is tunnel name."), tunnel.name))
                            } else {
-                               print("   ⚠️ \(tunnel.name) senkron olarak durdurulamadı (\(timeoutInterval)s timeout). Durum -> Durduruldu (termination handler bekleniyor).")
+                               print(String(format: NSLocalizedString("   ⚠️ %@ could not be stopped synchronously (%.1fs timeout). Status -> Stopped (waiting for termination handler).", comment: "Log message: Tunnel synchronous stop timed out. Parameters are tunnel name and timeout duration."), tunnel.name, timeoutInterval))
                                // Termination handler should eventually fire and confirm.
                            }
                            // Termination handler will still fire, potentially sending a notification, but we update UI state here for sync case.
@@ -431,7 +449,7 @@ class TunnelManager: ObservableObject {
              }
         } else {
              process.terminate() // Sends SIGTERM asynchronously
-             print("   Durdurma sinyali gönderildi (asenkron).")
+             print(NSLocalizedString("   Stop signal sent (asynchronously).", comment: "Log message: Asynchronous stop signal sent."))
              // Termination handler will update status and potentially send notification.
         }
     }
@@ -439,15 +457,15 @@ class TunnelManager: ObservableObject {
     // MARK: - Tunnel Creation & Config
     func createTunnel(name: String, completion: @escaping (Result<(uuid: String, jsonPath: String), Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
-            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "cloudflared yürütülebilir dosyası şurada bulunamadı: \(cloudflaredExecutablePath)"])))
+            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("cloudflared executable not found at: %@", comment: "Error message in createTunnel: cloudflared not found. Parameter is path."), cloudflaredExecutablePath)])))
             return
         }
         if name.rangeOfCharacter(from: .whitespacesAndNewlines) != nil || name.isEmpty {
-             completion(.failure(NSError(domain: "InputError", code: 11, userInfo: [NSLocalizedDescriptionKey: "Tünel adı boşluk içeremez ve boş olamaz."])))
+             completion(.failure(NSError(domain: "InputError", code: 11, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Tunnel name cannot contain spaces and cannot be empty.", comment: "Error message: Invalid tunnel name.")])))
              return
          }
 
-        print("🏗️ Yeni tünel oluşturuluyor: \(name)...")
+        print(String(format: NSLocalizedString("🏗️ Creating new tunnel: %@...", comment: "Log message: Creating new tunnel. Parameter is tunnel name."), name))
         let process = Process()
         process.executableURL = URL(fileURLWithPath: cloudflaredExecutablePath)
         process.arguments = ["tunnel", "create", name]
@@ -462,9 +480,9 @@ class TunnelManager: ObservableObject {
             let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let errorString = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let status = terminatedProcess.terminationStatus
-            print("   'tunnel create \(name)' bitti. Durum: \(status)")
-            if !outputString.isEmpty { print("   Output:\n\(outputString)") }
-            if !errorString.isEmpty { print("   Error:\n\(errorString)") }
+            print(String(format: NSLocalizedString("   'tunnel create %@' finished. Status: %d", comment: "Log message: 'tunnel create' command finished. Parameters are tunnel name and status code."), name, status))
+            if !outputString.isEmpty { print(String(format: NSLocalizedString("   Output:\n%@", comment: "Log message: Output from command. Parameter is output string."), outputString)) }
+            if !errorString.isEmpty { print(String(format: NSLocalizedString("   Error:\n%@", comment: "Log message: Error output from command. Parameter is error string."), errorString)) }
 
             if status == 0 {
                 var tunnelUUID: String?; var jsonPath: String?
@@ -490,17 +508,17 @@ class TunnelManager: ObservableObject {
                     // Use the path directly as given by cloudflared (it should be absolute)
                     let absolutePath = (path as NSString).standardizingPath // Clean path
                     if FileManager.default.fileExists(atPath: absolutePath) {
-                        print("   ✅ Tünel oluşturuldu: \(name) (UUID: \(uuid), JSON: \(absolutePath))")
+                        print(String(format: NSLocalizedString("   ✅ Tunnel created: %@ (UUID: %@, JSON: %@)", comment: "Log message: Tunnel created successfully. Parameters are name, UUID, JSON path."), name, uuid, absolutePath))
                         completion(.success((uuid: uuid, jsonPath: absolutePath)))
                     } else {
-                         print("   ❌ Tünel oluşturuldu ama JSON dosyası bulunamadı: \(absolutePath) (Orijinal Çıktı Yolu: \(path))")
-                         completion(.failure(NSError(domain: "CloudflaredManagerError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Tünel oluşturuldu ancak JSON kimlik bilgisi dosyası şurada bulunamadı:\n\(absolutePath)\n\nCloudflared çıktısını kontrol edin:\n\(outputString)"])))
+                         print(String(format: NSLocalizedString("   ❌ Tunnel created but JSON file not found: %@ (Original Output Path: %@)", comment: "Log message: Tunnel created but JSON file not found. Parameters are absolute path and original path from output."), absolutePath, path))
+                         completion(.failure(NSError(domain: "CloudflaredManagerError", code: 2, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Tunnel created but JSON credential file not found at:\n%@\n\nCheck cloudflared output:\n%@", comment: "Error message: Tunnel created but JSON file not found, with output. Parameters are path and cloudflared output."), absolutePath, outputString)])))
                     }
                  } else {
-                     completion(.failure(NSError(domain: "CloudflaredManagerError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Tünel oluşturuldu ancak UUID (\(tunnelUUID ?? "yok")) veya JSON yolu (\(jsonPath ?? "yok")) çıktıda bulunamadı:\n\(outputString)"])))
+                     completion(.failure(NSError(domain: "CloudflaredManagerError", code: 2, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Tunnel created but UUID (%@) or JSON path (%@) not found in output:\n%@", comment: "Error message: Tunnel created but UUID or JSON path missing from output. Parameters are UUID (or 'none'), JSON path (or 'none'), and output string."), tunnelUUID ?? "none", jsonPath ?? "none", outputString)])))
                  }
             } else {
-                let errorMsg = errorString.isEmpty ? "Tünel oluşturulurken bilinmeyen hata (Kod: \(status)). Cloudflare hesabınızda oturum açtınız mı?" : errorString
+                let errorMsg = errorString.isEmpty ? String(format: NSLocalizedString("Unknown error creating tunnel (Code: %d). Are you logged into your Cloudflare account?", comment: "Error message: Unknown error creating tunnel. Parameter is exit code."), status) : errorString
                 completion(.failure(NSError(domain: "CloudflaredCLIError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: errorMsg])))
             }
         }
@@ -509,7 +527,7 @@ class TunnelManager: ObservableObject {
 
     // createConfigFile fonksiyonunu bulun ve içini aşağıdaki gibi düzenleyin:
     func createConfigFile(configName: String, tunnelUUID: String, credentialsPath: String, hostname: String, port: String, documentRoot: String?, completion: @escaping (Result<String, Error>) -> Void) {
-         print("📄 Yapılandırma dosyası oluşturuluyor: \(configName).yml")
+         print(String(format: NSLocalizedString("📄 Creating configuration file: %@.yml", comment: "Log message: Creating config file. Parameter is config name."), configName))
             let fileManager = FileManager.default
 
             // Ensure ~/.cloudflared directory exists
@@ -518,18 +536,18 @@ class TunnelManager: ObservableObject {
                  do {
                      try fileManager.createDirectory(atPath: cloudflaredDirectoryPath, withIntermediateDirectories: true, attributes: nil)
                  } catch {
-                     completion(.failure(NSError(domain: "FileSystemError", code: 4, userInfo: [NSLocalizedDescriptionKey:"~/.cloudflared dizini oluşturulamadı: \(error.localizedDescription)"]))); return
+                     completion(.failure(NSError(domain: "FileSystemError", code: 4, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Could not create ~/.cloudflared directory: %@", comment: "Error message: Failed to create .cloudflared directory. Parameter is error description."), error.localizedDescription)]))); return
                  }
              }
 
              var cleanConfigName = configName.replacingOccurrences(of: ".yaml", with: "").replacingOccurrences(of: ".yml", with: "")
              cleanConfigName = cleanConfigName.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "\\", with: "_")
              if cleanConfigName.isEmpty {
-                  completion(.failure(NSError(domain: "InputError", code: 12, userInfo: [NSLocalizedDescriptionKey: "Geçersiz config dosyası adı."]))); return
+                  completion(.failure(NSError(domain: "InputError", code: 12, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Invalid config file name.", comment: "Error message: Invalid config file name.")]))); return
              }
              let targetPath = "\(cloudflaredDirectoryPath)/\(cleanConfigName).yml"
              if fileManager.fileExists(atPath: targetPath) {
-                 completion(.failure(NSError(domain: "CloudflaredManagerError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Yapılandırma dosyası zaten mevcut: \(targetPath)"]))); return
+                 completion(.failure(NSError(domain: "CloudflaredManagerError", code: 3, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Configuration file already exists: %@", comment: "Error message: Config file already exists. Parameter is path."), targetPath)]))); return
              }
 
              // Use the absolute path for credentials-file as provided by `tunnel create`
@@ -552,86 +570,93 @@ class TunnelManager: ObservableObject {
 
         do {
             try yamlContent.write(toFile: targetPath, atomically: true, encoding: .utf8)
-            print("   ✅ Yapılandırma dosyası oluşturuldu: \(targetPath)")
+            print(String(format: NSLocalizedString("   ✅ Configuration file created: %@", comment: "Log message: Config file created successfully. Parameter is path."), targetPath))
 
-            // --- MAMP Güncellemeleri (DispatchGroup ile Eş Zamanlı) ---
+            // --- MAMP Updates (Concurrent with DispatchGroup) ---
             var vhostUpdateError: Error? = nil
             var listenUpdateError: Error? = nil
-            let mampUpdateGroup = DispatchGroup() // Eş zamanlılık için
+            let mampUpdateGroup = DispatchGroup() // For concurrency
 
-            // Sadece documentRoot varsa MAMP güncellemelerini yap
+            // Only perform MAMP updates if documentRoot is provided
             if let docRoot = documentRoot, !docRoot.isEmpty {
-                // 1. vHost Güncellemesi
+                // 1. vHost Update
                 mampUpdateGroup.enter()
                 updateMampVHost(serverName: hostname, documentRoot: docRoot, port: port) { result in
                     if case .failure(let error) = result {
-                        vhostUpdateError = error // Hatayı sakla
-                        print("⚠️ MAMP vHost güncelleme hatası: \(error.localizedDescription)")
-                        // (Bildirim zaten updateMampVHost içinde gönderiliyor)
+                        vhostUpdateError = error // Store error
+                        print(String(format: NSLocalizedString("⚠️ MAMP vHost update error: %@", comment: "Log message: MAMP vHost update error. Parameter is error description."), error.localizedDescription))
+                        // (Notification is already sent within updateMampVHost)
                     } else {
-                        print("✅ MAMP vHost dosyası başarıyla güncellendi (veya zaten vardı).")
+                        print(NSLocalizedString("✅ MAMP vHost file updated successfully (or already existed).", comment: "Log message: MAMP vHost updated successfully."))
                     }
                     mampUpdateGroup.leave()
                 }
 
-                // 2. httpd.conf Listen Güncellemesi
+                // 2. httpd.conf Listen Update
                 mampUpdateGroup.enter()
                 updateMampHttpdConfListen(port: port) { result in
                     if case .failure(let error) = result {
-                        listenUpdateError = error // Hatayı sakla
-                        print("⚠️ MAMP httpd.conf Listen güncelleme hatası: \(error.localizedDescription)")
-                        // (Bildirim updateMampHttpdConfListen içinde gönderiliyor, ama burada tekrar gönderebiliriz)
-                         self.postUserNotification(identifier: "mamp_httpd_update_fail_\(port)", title: "MAMP httpd.conf Hatası", body: "'Listen \(port)' eklenemedi. İzinleri kontrol edin veya manuel ekleyin.\n\(error.localizedDescription)")
+                        listenUpdateError = error // Store error
+                        print(String(format: NSLocalizedString("⚠️ MAMP httpd.conf Listen update error: %@", comment: "Log message: MAMP httpd.conf Listen update error. Parameter is error description."), error.localizedDescription))
+                        // (Notification sent in updateMampHttpdConfListen, but can resend here)
+                        let errorTitle = NSLocalizedString("MAMP httpd.conf Error", comment: "Notification title: MAMP httpd.conf error")
+                        let errorBody = String(format: NSLocalizedString("'Listen %@' could not be added. Check permissions or add manually.\n%@", comment: "Notification body: Failed to add Listen directive to httpd.conf. Parameters are port and error."), port, error.localizedDescription)
+                        self.postUserNotification(identifier: "mamp_httpd_update_fail_\(port)", title: errorTitle, body: errorBody)
                     } else {
-                        print("✅ MAMP httpd.conf Listen direktifi başarıyla güncellendi (veya zaten vardı).")
+                        print(NSLocalizedString("✅ MAMP httpd.conf Listen directive updated successfully (or already existed).", comment: "Log message: MAMP httpd.conf Listen updated successfully."))
                     }
                     mampUpdateGroup.leave()
                 }
             } else {
-                 print("ℹ️ DocumentRoot belirtilmedi veya boş, MAMP yapılandırma dosyaları güncellenmedi.")
+                 print(NSLocalizedString("ℹ️ DocumentRoot not specified or empty, MAMP configuration files not updated.", comment: "Log message: DocumentRoot not provided, MAMP files not updated."))
             }
 
-            // MAMP güncellemelerinin bitmesini bekle ve sonucu bildir
+            // Wait for MAMP updates to finish and report result
             mampUpdateGroup.notify(queue: .main) { [weak self] in
                  guard let self = self else { return }
-                 self.findManagedTunnels() // Listeyi yenile
+                 self.findManagedTunnels() // Refresh list
 
-                 // Genel sonucu bildir
+                 // Report overall result
                  if vhostUpdateError == nil && listenUpdateError == nil {
-                      // Her iki MAMP güncellemesi de başarılı (veya gerekmiyordu)
-                      self.postUserNotification(identifier: "config_created_\(cleanConfigName)", title: "Config Oluşturuldu", body: "'\(cleanConfigName).yml' dosyası oluşturuldu." + (documentRoot != nil ? " MAMP yapılandırması güncellendi." : ""))
+                      // Both MAMP updates successful (or not needed)
+                      let successTitle = NSLocalizedString("Config Created", comment: "Notification title: Config file created")
+                      var successBody = String(format: NSLocalizedString("'%@.yml' file created.", comment: "Notification body: Config file created. Parameter is config name."), cleanConfigName)
+                      if documentRoot != nil { successBody += NSLocalizedString(" MAMP configuration updated.", comment: "Notification body suffix: MAMP config updated.") }
+                      self.postUserNotification(identifier: "config_created_\(cleanConfigName)", title: successTitle, body: successBody)
                       completion(.success(targetPath))
                  } else {
-                      // Config başarılı ama MAMP güncellemelerinde hata var
+                      // Config successful but MAMP updates had errors
                       let combinedErrorDesc = [
                           vhostUpdateError != nil ? "vHost: \(vhostUpdateError!.localizedDescription)" : nil,
                           listenUpdateError != nil ? "httpd.conf: \(listenUpdateError!.localizedDescription)" : nil
                       ].compactMap { $0 }.joined(separator: "\n")
 
-                      print("❌ Config oluşturuldu, ancak MAMP güncellemelerinde hata(lar) var.")
-                      // Kullanıcıya config'in başarılı olduğunu ama MAMP için uyarıyı bildir
-                      self.postUserNotification(identifier: "config_created_mamp_warn_\(cleanConfigName)", title: "Config Oluşturuldu (MAMP Uyarısı)", body: "'\(cleanConfigName).yml' oluşturuldu, ancak MAMP yapılandırması güncellenirken hata(lar) oluştu:\n\(combinedErrorDesc)\nLütfen MAMP ayarlarını manuel kontrol edin.")
-                      // Yine de başarı olarak dönebiliriz, çünkü tünel ve config tamamlandı.
+                      print(NSLocalizedString("❌ Config created, but MAMP update(s) failed.", comment: "Log message: Config created, but MAMP updates failed."))
+                      // Notify user that config is successful but warn about MAMP
+                      let warningTitle = NSLocalizedString("Config Created (MAMP Warning)", comment: "Notification title: Config created with MAMP warning")
+                      let warningBody = String(format: NSLocalizedString("'%1$@.yml' created, but error(s) occurred while updating MAMP configuration:\n%2$@\nPlease check MAMP settings manually.", comment: "Notification body: Config created, but MAMP update errors. Parameters are config name and combined error description."), cleanConfigName, combinedErrorDesc)
+                      self.postUserNotification(identifier: "config_created_mamp_warn_\(cleanConfigName)", title: warningTitle, body: warningBody)
+                      // Can still return success, as tunnel and config are done.
                       completion(.success(targetPath))
-                      // VEYA Hata olarak dönmek isterseniz:
-                      // let error = NSError(domain: "PartialSuccessError", code: 99, userInfo: [NSLocalizedDescriptionKey: "Config dosyası oluşturuldu, ancak MAMP güncellemelerinde hata(lar) oluştu:\n\(combinedErrorDesc)"])
+                      // OR if you want to return an error:
+                      // let error = NSError(domain: "PartialSuccessError", code: 99, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Config file created, but MAMP update(s) failed:\n%@", comment: "Error message for partial success with MAMP errors. Parameter is combined error description."), combinedErrorDesc)])
                       // completion(.failure(error))
                  }
             }
         } catch {
-            // .yml dosyası yazılamadıysa
-            print("❌ Hata: Yapılandırma dosyası yazılamadı: \(targetPath) - \(error)")
+            // If .yml file couldn't be written
+            print(String(format: NSLocalizedString("❌ Error: Could not write configuration file: %@ - %@", comment: "Log message: Error writing config file. Parameters are path and error."), targetPath, error.localizedDescription))
             completion(.failure(error))
         }
-    } // createConfigFile sonu
+    } // End of createConfigFile
 
     // MARK: - Tunnel Deletion (Revised - Removing --force temporarily)
     func deleteTunnel(tunnelInfo: TunnelInfo, completion: @escaping (Result<Void, Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
-            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "cloudflared yürütülebilir dosyası bulunamadı."]))); return
+            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("cloudflared executable not found.", comment: "Error message in deleteTunnel: cloudflared not found.")]))); return
         }
 
-        // Silme için KESİNLİKLE UUID'yi tercih et
+        // STRONGLY prefer UUID for deletion
         let identifierToDelete: String
         let idType: String
         if let uuid = tunnelInfo.uuidFromConfig, !uuid.isEmpty {
@@ -640,28 +665,28 @@ class TunnelManager: ObservableObject {
         } else {
             identifierToDelete = tunnelInfo.name // Fallback to name
             idType = "Name"
-            print("   ⚠️ Uyarı: Config dosyasından tünel UUID'si okunamadı, isim ('\(identifierToDelete)') ile silme deneniyor.")
+            print(String(format: NSLocalizedString("   ⚠️ Warning: Could not read tunnel UUID from config, attempting deletion by name ('%@').", comment: "Log message: Warning, deleting tunnel by name as UUID not found. Parameter is tunnel name."), identifierToDelete))
         }
 
-        // !!! --force flag'ini GEÇİCİ OLARAK KALDIRIYORUZ !!!
-        print("🗑️ Tünel siliniyor (Identifier: \(identifierToDelete), Type: \(idType)) [--force KULLANILMIYOR]...")
+        // !!! TEMPORARILY REMOVING --force flag !!!
+        print(String(format: NSLocalizedString("🗑️ Deleting tunnel (Identifier: %@, Type: %@) [--force NOT USED]...", comment: "Log message: Deleting tunnel without --force. Parameters are identifier and type (UUID/Name)."), identifierToDelete, idType))
 
-        // Adım 1: Tüneli durdur (Senkron)
+        // Step 1: Stop the tunnel (Synchronously)
         if let configPath = tunnelInfo.configPath, runningManagedProcesses[configPath] != nil {
-            print("   Silmeden önce tünel durduruluyor: \(tunnelInfo.name)")
+            print(String(format: NSLocalizedString("   Stopping tunnel before deletion: %@", comment: "Log message: Stopping tunnel before deletion. Parameter is tunnel name."), tunnelInfo.name))
             stopManagedTunnel(tunnelInfo, synchronous: true)
-            Thread.sleep(forTimeInterval: 0.5) // Kısa bekleme
-            print("   Durdurma işlemi sonrası devam ediliyor...")
+            Thread.sleep(forTimeInterval: 0.5) // Brief pause
+            print(NSLocalizedString("   Continuing after stop attempt...", comment: "Log message: Continuing after tunnel stop attempt."))
         } else {
-             print("   Tünel zaten çalışmıyor veya uygulama tarafından yönetilmiyor.")
+             print(NSLocalizedString("   Tunnel not running or not managed by this app.", comment: "Log message: Tunnel not running or not managed by app, skipping stop for deletion."))
         }
 
 
-        // Adım 2: Silme komutunu çalıştır (--force OLMADAN)
+        // Step 2: Run delete command (WITHOUT --force)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: cloudflaredExecutablePath)
-        // process.arguments = ["tunnel", "delete", identifierToDelete, "--force"] // ESKİ HALİ
-        process.arguments = ["tunnel", "delete", identifierToDelete] // YENİ HALİ (--force YOK)
+        // process.arguments = ["tunnel", "delete", identifierToDelete, "--force"] // OLD WAY
+        process.arguments = ["tunnel", "delete", identifierToDelete] // NEW WAY (no --force)
         let outputPipe = Pipe(); let errorPipe = Pipe()
         process.standardOutput = outputPipe; process.standardError = errorPipe
 
@@ -672,42 +697,42 @@ class TunnelManager: ObservableObject {
             let errorString = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let status = terminatedProcess.terminationStatus
 
-            print("   'tunnel delete \(identifierToDelete)' [--force YOK] bitti. Çıkış Kodu: \(status)")
-            if !outputString.isEmpty { print("   Output: \(outputString)") }
-            if !errorString.isEmpty { print("   Error: \(errorString)") }
+            print(String(format: NSLocalizedString("   'tunnel delete %@' [--force NOT USED] finished. Exit Code: %d", comment: "Log message: 'tunnel delete' command finished without --force. Parameters are identifier and exit code."), identifierToDelete, status))
+            if !outputString.isEmpty { print(String(format: NSLocalizedString("   Output: %@", comment: "Log message: Output from command. Parameter is output string."), outputString)) }
+            if !errorString.isEmpty { print(String(format: NSLocalizedString("   Error: %@", comment: "Log message: Error output from command. Parameter is error string."), errorString)) }
 
-            // Sonucu Değerlendirme
+            // Evaluate Result
             let lowerError = errorString.lowercased()
-            let specificAmbiguityError = "there should only be 1 non-deleted tunnel named" // Bu hata hala gelebilir mi?
+            let specificAmbiguityError = NSLocalizedString("there should only be 1 non-deleted tunnel named", comment: "Substring in error message indicating tunnel name ambiguity").lowercased()
 
             if status == 0 {
-                print("   ✅ Tünel başarıyla silindi (Çıkış Kodu 0): \(identifierToDelete)")
+                print(String(format: NSLocalizedString("   ✅ Tunnel deleted successfully (Exit Code 0): %@", comment: "Log message: Tunnel deleted successfully. Parameter is identifier."), identifierToDelete))
                 completion(.success(()))
             }
-            else if lowerError.contains("tunnel not found") || lowerError.contains("could not find tunnel") {
-                print("   ℹ️ Tünel zaten silinmiş veya bulunamadı (Hata mesajı): \(identifierToDelete)")
-                completion(.success(())) // Başarılı kabul et
+            else if lowerError.contains(NSLocalizedString("tunnel not found", comment: "Substring in error message for tunnel not found").lowercased()) || lowerError.contains(NSLocalizedString("could not find tunnel", comment: "Substring in error message for could not find tunnel").lowercased()) {
+                print(String(format: NSLocalizedString("   ℹ️ Tunnel already deleted or not found (Error message): %@", comment: "Log message: Tunnel already deleted or not found by error message. Parameter is identifier."), identifierToDelete))
+                completion(.success(())) // Treat as success
             }
-            // Eğer --force olmadan da aynı "named" hatası geliyorsa, sorun daha derinde.
+            // If the same "named" error occurs even without --force, the issue is deeper.
             else if lowerError.contains(specificAmbiguityError) {
-                 // --force olmamasına rağmen bu hatanın gelmesi çok daha tuhaf olurdu.
-                 print("   ❌ Tünel silme hatası: Cloudflare tarafında isim/UUID çakışması veya başka bir tutarsızlık var (--force kullanılmadı).")
-                 let errorMsg = "Tünel silinemedi çünkü Cloudflare tarafında bir tutarsızlık var (--force kullanılmadı).\n\nHata Mesajı: '\(errorString)'\n\nLütfen bu tüneli Cloudflare Dashboard üzerinden kontrol edip manuel olarak silin."
+                 // This error occurring without --force would be much stranger.
+                 print(NSLocalizedString("   ❌ Tunnel deletion error: Name/UUID conflict or other inconsistency on Cloudflare side (did not use --force).", comment: "Log message: Tunnel deletion error due to Cloudflare inconsistency, --force not used."))
+                 let errorMsg = String(format: NSLocalizedString("Tunnel could not be deleted due to an inconsistency on Cloudflare's side (did not use --force).\n\nError Message: '%@'\n\nPlease check and manually delete this tunnel via the Cloudflare Dashboard.", comment: "Error message: Tunnel deletion failed due to Cloudflare inconsistency, --force not used. Parameters are error string."), errorString)
                  completion(.failure(NSError(domain: "CloudflaredCLIError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: errorMsg])))
             }
-            // Diğer tüm hatalar
+            // All other errors
             else {
-                let errorMsg = errorString.isEmpty ? "Tünel silinirken bilinmeyen bir hata oluştu (Çıkış Kodu: \(status))." : errorString
-                print("   ❌ Tünel silme hatası (--force kullanılmadı): \(errorMsg)")
+                let errorMsg = errorString.isEmpty ? String(format: NSLocalizedString("Unknown error deleting tunnel (Exit Code: %d).", comment: "Error message: Unknown error deleting tunnel. Parameter is exit code."), status) : errorString
+                print(String(format: NSLocalizedString("   ❌ Tunnel deletion error (did not use --force): %@", comment: "Log message: Tunnel deletion error without --force. Parameter is error message."), errorMsg))
                 completion(.failure(NSError(domain: "CloudflaredCLIError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: errorMsg])))
             }
-        } // Termination Handler Sonu
+        } // End Termination Handler
 
-        // İşlemi Başlat
+        // Start Process
         do {
             try process.run()
         } catch {
-            print("❌ 'tunnel delete' işlemi başlatılamadı: \(error)")
+            print(String(format: NSLocalizedString("❌ Failed to start 'tunnel delete' process: %@", comment: "Log message: Failed to start 'tunnel delete' process. Parameter is error."), error.localizedDescription))
             completion(.failure(error))
         }
     }
@@ -742,7 +767,7 @@ class TunnelManager: ObservableObject {
                     if inIngressSection && currentIndentLevel > serviceIndentLevel && trimmedLine.starts(with: "hostname:") { return extractYamlValue(from: trimmedLine.dropFirst("hostname:".count)) }
                 }
             }
-        } catch { print("⚠️ Config okuma hatası: \(filePath), \(error)") }
+        } catch { print(String(format: NSLocalizedString("⚠️ Config read error: %@, %@", comment: "Log message: Error reading config file. Parameters are file path and error."), filePath, error.localizedDescription)) }
         return nil
     }
 
@@ -756,35 +781,35 @@ class TunnelManager: ObservableObject {
     // Finds the absolute path to the credentials file referenced in a config
         func findCredentialPath(for configPath: String) -> String? {
             guard let credentialsPathValue = parseValueFromYaml(key: "credentials-file", filePath: configPath) else {
-                print("   Uyarı: 'credentials-file' anahtarı config'de bulunamadı: \(configPath)")
+                print(String(format: NSLocalizedString("   Warning: 'credentials-file' key not found in config: %@", comment: "Log message: 'credentials-file' key not found in config. Parameter is config path."), configPath))
                 return nil
             }
 
-            // Adım 1: Tilde'yi (~) genişlet (eğer varsa)
+            // Step 1: Expand tilde (~) if present
             let expandedPathString = (credentialsPathValue as NSString).expandingTildeInPath
 
-            // Adım 2: Genişletilmiş yolu standardize et (örn: gereksiz /../ gibi kısımları temizler)
-            // expandedPathString bir Swift String'i olduğu için tekrar NSString'e çeviriyoruz.
+            // Step 2: Standardize the expanded path (e.g., cleans up unnecessary /../ parts)
+            // Convert expandedPathString (Swift String) back to NSString for standardization.
             let standardizedPath = (expandedPathString as NSString).standardizingPath
 
-            // Adım 3: Standardize edilmiş mutlak yolun varlığını kontrol et
+            // Step 3: Check if the standardized absolute path exists
             if standardizedPath.hasPrefix("/") && FileManager.default.fileExists(atPath: standardizedPath) {
-                // Eğer bulunduysa, standardize edilmiş yolu döndür
+                // If found, return the standardized path
                 return standardizedPath
             } else {
-                print("   Kimlik bilgisi dosyası config'de belirtilen yolda bulunamadı: \(standardizedPath) (Orijinal: '\(credentialsPathValue)', Config: \(configPath))")
+                print(String(format: NSLocalizedString("   Credential file not found at path specified in config: %@ (Original: '%@', Config: %@)", comment: "Log message: Credential file not found at specified path. Parameters are standardized path, original path, config path."), standardizedPath, credentialsPathValue, configPath))
 
-                // --- Fallback (Eğer mutlak yol çalışmazsa, nadiren ihtiyaç duyulur) ---
-                // ~/.cloudflared dizinine göreceli yolu kontrol et
+                // --- Fallback (rarely needed if absolute path doesn't work) ---
+                // Check path relative to ~/.cloudflared directory
                 let pathInCloudflaredDir = cloudflaredDirectoryPath.appending("/").appending(credentialsPathValue)
-                let standardizedRelativePath = (pathInCloudflaredDir as NSString).standardizingPath // Bunu da standardize et
+                let standardizedRelativePath = (pathInCloudflaredDir as NSString).standardizingPath // Standardize this too
                 if FileManager.default.fileExists(atPath: standardizedRelativePath) {
-                    print("   Fallback: Kimlik bilgisi dosyası ~/.cloudflared içinde bulundu: \(standardizedRelativePath)")
+                    print(String(format: NSLocalizedString("   Fallback: Credential file found in ~/.cloudflared: %@", comment: "Log message: Fallback, credential file found in .cloudflared directory. Parameter is path."), standardizedRelativePath))
                     return standardizedRelativePath
                 }
-                // --- Fallback Sonu ---
+                // --- End Fallback ---
 
-                return nil // Hiçbir yerde bulunamadı
+                return nil // Not found anywhere
             }
         }
 
@@ -797,15 +822,15 @@ class TunnelManager: ObservableObject {
     // MARK: - DNS Routing
     func routeDns(tunnelInfo: TunnelInfo, hostname: String, completion: @escaping (Result<String, Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
-            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "cloudflared bulunamadı."]))); return
+            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("cloudflared not found.", comment: "Error message in routeDns: cloudflared not found.")]))); return
         }
         guard !hostname.isEmpty && hostname.contains(".") && hostname.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else {
-             completion(.failure(NSError(domain: "InputError", code: 13, userInfo: [NSLocalizedDescriptionKey: "Geçersiz hostname formatı."])))
+             completion(.failure(NSError(domain: "InputError", code: 13, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Invalid hostname format.", comment: "Error message: Invalid hostname format for DNS routing.")])))
              return
         }
 
         let tunnelIdentifier = tunnelInfo.uuidFromConfig ?? tunnelInfo.name
-        print("🔗 DNS yönlendiriliyor: \(tunnelIdentifier) -> \(hostname)...")
+        print(String(format: NSLocalizedString("🔗 Routing DNS: %@ -> %@...", comment: "Log message: Routing DNS. Parameters are tunnel identifier and hostname."), tunnelIdentifier, hostname))
         let process = Process()
         process.executableURL = URL(fileURLWithPath: cloudflaredExecutablePath)
         process.arguments = ["tunnel", "route", "dns", tunnelIdentifier, hostname]
@@ -819,18 +844,18 @@ class TunnelManager: ObservableObject {
             let errorString = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let status = terminatedProcess.terminationStatus
 
-            print("   'tunnel route dns' bitti. Durum: \(status)")
-            if !outputString.isEmpty { print("   Output: \(outputString)") }
-            if !errorString.isEmpty { print("   Error: \(errorString)") }
+            print(String(format: NSLocalizedString("   'tunnel route dns' finished. Status: %d", comment: "Log message: 'tunnel route dns' command finished. Parameter is status code."), status))
+            if !outputString.isEmpty { print(String(format: NSLocalizedString("   Output: %@", comment: "Log message: Output from command. Parameter is output string."), outputString)) }
+            if !errorString.isEmpty { print(String(format: NSLocalizedString("   Error: %@", comment: "Log message: Error output from command. Parameter is error string."), errorString)) }
 
             if status == 0 {
-                if errorString.lowercased().contains("already exists") || outputString.lowercased().contains("already exists") {
-                     completion(.success("Başarılı: DNS kaydı zaten mevcut veya güncellendi.\n\(outputString)"))
+                if errorString.lowercased().contains(NSLocalizedString("already exists", comment: "Substring in error message for DNS record already exists").lowercased()) || outputString.lowercased().contains(NSLocalizedString("already exists", comment: "Substring in output message for DNS record already exists").lowercased()) {
+                     completion(.success(String(format: NSLocalizedString("Success: DNS record already exists or was updated.\n%@", comment: "Success message: DNS record already exists or updated. Parameter is command output."), outputString)))
                 } else {
-                     completion(.success(outputString.isEmpty ? "DNS yönlendirmesi başarıyla eklendi/güncellendi." : outputString))
+                     completion(.success(outputString.isEmpty ? NSLocalizedString("DNS route added/updated successfully.", comment: "Success message: DNS route added/updated.") : outputString))
                 }
             } else {
-                let errorMsg = errorString.isEmpty ? "DNS yönlendirme hatası (Kod: \(status)). Alan adınız Cloudflare'de mi?" : errorString
+                let errorMsg = errorString.isEmpty ? String(format: NSLocalizedString("DNS routing error (Code: %d). Is your domain on Cloudflare?", comment: "Error message: DNS routing error. Parameter is exit code."), status) : errorString
                 completion(.failure(NSError(domain: "CloudflaredCLIError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: errorMsg])))
             }
         }
@@ -839,88 +864,90 @@ class TunnelManager: ObservableObject {
     
     
     
-    // TunnelManager sınıfının içine, tercihen updateMampVHost fonksiyonunun yakınına ekleyin:
+    // Add inside TunnelManager class, preferably near updateMampVHost function:
     private func updateMampHttpdConfListen(port: String, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let portInt = Int(port), (1...65535).contains(portInt) else {
-            completion(.failure(NSError(domain: "HttpdConfError", code: 30, userInfo: [NSLocalizedDescriptionKey: "Geçersiz Port Numarası: \(port)"])))
+            completion(.failure(NSError(domain: "HttpdConfError", code: 30, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Invalid Port Number: %@", comment: "Error message: Invalid port number for httpd.conf Listen. Parameter is port."), port)])))
             return
         }
-        let listenDirective = "Listen \(port)" // Örn: "Listen 8080"
+        let listenDirective = "Listen \(port)" // e.g., "Listen 8080"
         let httpdPath = mampHttpdConfPath
 
         guard FileManager.default.fileExists(atPath: httpdPath) else {
-            completion(.failure(NSError(domain: "HttpdConfError", code: 31, userInfo: [NSLocalizedDescriptionKey: "MAMP httpd.conf dosyası bulunamadı: \(httpdPath)"])))
+            completion(.failure(NSError(domain: "HttpdConfError", code: 31, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("MAMP httpd.conf file not found: %@", comment: "Error message: MAMP httpd.conf not found. Parameter is path."), httpdPath)])))
             return
         }
 
-        // Yazma iznini kontrol et (en azından üst dizine)
+        // Check write permission (at least for the parent directory)
         guard FileManager.default.isWritableFile(atPath: httpdPath) else {
-             completion(.failure(NSError(domain: "HttpdConfError", code: 32, userInfo: [NSLocalizedDescriptionKey: "Yazma izni hatası: MAMP httpd.conf dosyası güncellenemedi (\(httpdPath)). İzinleri kontrol edin."])))
+             completion(.failure(NSError(domain: "HttpdConfError", code: 32, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Write permission error: MAMP httpd.conf file could not be updated (%@). Check permissions.", comment: "Error message: Write permission error for httpd.conf. Parameter is path."), httpdPath)])))
              return
         }
 
         do {
             var currentContent = try String(contentsOfFile: httpdPath, encoding: .utf8)
 
-            // Direktifin zaten var olup olmadığını kontrol et (yorum satırları hariç)
-            // Regex: Satır başında boşluk olabilir, sonra "Listen", sonra boşluk, sonra port numarası, sonra boşluk veya satır sonu.
+            // Check if the directive already exists (excluding commented lines)
+            // Regex: Start of line, optional whitespace, "Listen", whitespace, port number, whitespace or end of line.
             let pattern = #"^\s*Listen\s+\#(portInt)\s*(?:#.*)?$"#
             if currentContent.range(of: pattern, options: .regularExpression) != nil {
-                print("ℹ️ MAMP httpd.conf zaten '\(listenDirective)' içeriyor.")
+                print(String(format: NSLocalizedString("ℹ️ MAMP httpd.conf already contains '%@'.", comment: "Log message: httpd.conf already contains Listen directive. Parameter is the directive."), listenDirective))
                 completion(.success(()))
                 return
             }
 
-            // Ekleme noktasını bul: Son "Listen" satırının sonrasını hedefle
+            // Find insertion point: target after the last "Listen" line
             var insertionPoint = currentContent.endIndex
-            // Desen: Satır başı, boşluk olabilir, "Listen", boşluk, RAKAMLAR.
+            // Pattern: Start of line, optional whitespace, "Listen", whitespace, DIGITS.
             let lastListenPattern = #"^\s*Listen\s+\d+"#
-            // Sondan başlayarak ara
+            // Search from the end
             if let lastListenMatchRange = currentContent.range(of: lastListenPattern, options: [.regularExpression, .backwards]) {
-                // Bulunan satırın sonunu bul
+                // Find the end of the found line
                 if let lineEndRange = currentContent.range(of: "\n", options: [], range: lastListenMatchRange.upperBound..<currentContent.endIndex) {
-                    insertionPoint = lineEndRange.upperBound // Sonraki satırın başı
+                    insertionPoint = lineEndRange.upperBound // Start of the next line
                 } else {
-                    // Dosyanın son satırıysa, sona eklemeden önce newline ekle
+                    // If it's the last line of the file, add a newline before appending
                     if !currentContent.hasSuffix("\n") { currentContent += "\n" }
                     insertionPoint = currentContent.endIndex
                 }
             } else {
-                // Hiç "Listen" bulunamazsa (çok nadir), dosyanın sonuna ekle
-                print("⚠️ MAMP httpd.conf içinde 'Listen' direktifi bulunamadı. Sona ekleniyor.")
+                // If no "Listen" found (very rare), append to the end of the file
+                print(NSLocalizedString("⚠️ No 'Listen' directive found in MAMP httpd.conf. Appending to end.", comment: "Log message: No Listen directive found, appending to end."))
                 if !currentContent.hasSuffix("\n") { currentContent += "\n" }
                 insertionPoint = currentContent.endIndex
             }
 
-            // Eklenecek içeriği hazırla
+            // Prepare content to insert
             let contentToInsert = "\n# Added by Cloudflared Manager App for port \(port)\n\(listenDirective)\n"
             currentContent.insert(contentsOf: contentToInsert, at: insertionPoint)
 
-            // Değiştirilmiş içeriği dosyaya yaz
+            // Write modified content to file
             try currentContent.write(toFile: httpdPath, atomically: true, encoding: .utf8)
-            print("✅ MAMP httpd.conf güncellendi: '\(listenDirective)' direktifi eklendi.")
+            print(String(format: NSLocalizedString("✅ MAMP httpd.conf updated: '%@' directive added.", comment: "Log message: httpd.conf updated with Listen directive. Parameter is the directive."), listenDirective))
 
-            // Kullanıcıyı bilgilendir (MAMP yeniden başlatma hatırlatması)
+            // Inform user (MAMP restart reminder)
+            let notificationTitle = NSLocalizedString("MAMP httpd.conf Updated", comment: "Notification title: MAMP httpd.conf updated")
+            let notificationBody = String(format: NSLocalizedString("'%@' directive added. MAMP servers may need to be restarted for changes to take effect.", comment: "Notification body: Listen directive added to httpd.conf, MAMP restart may be needed. Parameter is the directive."), listenDirective)
             postUserNotification(
                 identifier: "mamp_httpd_listen_added_\(port)",
-                title: "MAMP httpd.conf Güncellendi",
-                body: "'\(listenDirective)' direktifi eklendi. Ayarların etkili olması için MAMP sunucularını yeniden başlatmanız gerekebilir."
+                title: notificationTitle,
+                body: notificationBody
             )
             completion(.success(()))
 
         } catch {
-            print("❌ MAMP httpd.conf güncellenirken HATA: \(error)")
-            // Hata detayını completion'a ilet
-            completion(.failure(NSError(domain: "HttpdConfError", code: 33, userInfo: [NSLocalizedDescriptionKey: "MAMP httpd.conf okuma/yazma hatası: \(error.localizedDescription)"])))
+            print(String(format: NSLocalizedString("❌ ERROR updating MAMP httpd.conf: %@", comment: "Log message: Error updating httpd.conf. Parameter is error."), error.localizedDescription))
+            // Pass error details to completion
+            completion(.failure(NSError(domain: "HttpdConfError", code: 33, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("MAMP httpd.conf read/write error: %@", comment: "Error message: httpd.conf read/write error. Parameter is error description."), error.localizedDescription)])))
         }
     }
 
     // MARK: - Cloudflare Login
     func cloudflareLogin(completion: @escaping (Result<Void, Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
-            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "cloudflared bulunamadı."]))); return
+            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("cloudflared not found.", comment: "Error message in cloudflareLogin: cloudflared not found.")]))); return
         }
-        print("🔑 Cloudflare girişi başlatılıyor (Tarayıcı açılacak)...")
+        print(NSLocalizedString("🔑 Initializing Cloudflare login (browser will open)...", comment: "Log message: Initializing Cloudflare login."))
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: cloudflaredExecutablePath)
@@ -934,28 +961,28 @@ class TunnelManager: ObservableObject {
              let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
              let errorString = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
              let status = terminatedProcess.terminationStatus
-             print("   'cloudflared login' bitti. Durum: \(status)")
-             if !outputString.isEmpty { print("   Output:\n\(outputString)") }
-             if !errorString.isEmpty { print("   Error:\n\(errorString)") }
+             print(String(format: NSLocalizedString("   'cloudflared login' finished. Status: %d", comment: "Log message: 'cloudflared login' command finished. Parameter is status code."), status))
+             if !outputString.isEmpty { print(String(format: NSLocalizedString("   Output:\n%@", comment: "Log message: Output from command. Parameter is output string."), outputString)) }
+             if !errorString.isEmpty { print(String(format: NSLocalizedString("   Error:\n%@", comment: "Log message: Error output from command. Parameter is error string."), errorString)) }
 
              if status == 0 {
-                 if outputString.contains("You have successfully logged in") || outputString.contains("already logged in") {
-                     print("   ✅ Giriş başarılı veya zaten yapılmış.")
+                 if outputString.contains(NSLocalizedString("You have successfully logged in", comment: "Substring in login success message")) || outputString.contains(NSLocalizedString("already logged in", comment: "Substring in already logged in message")) {
+                     print(NSLocalizedString("   ✅ Login successful or already logged in.", comment: "Log message: Login successful or already done."))
                      completion(.success(()))
                  } else {
-                     print("   Giriş işlemi başlatıldı, tarayıcıda devam edin.")
+                     print(NSLocalizedString("   Login process initiated, continue in browser.", comment: "Log message: Login process started, user to continue in browser."))
                      completion(.success(())) // Assume user needs to interact with browser
                  }
              } else {
-                 let errorMsg = errorString.isEmpty ? "Cloudflare girişinde bilinmeyen hata (Kod: \(status))" : errorString
+                 let errorMsg = errorString.isEmpty ? String(format: NSLocalizedString("Unknown Cloudflare login error (Code: %d)", comment: "Error message: Unknown Cloudflare login error. Parameter is exit code."), status) : errorString
                  completion(.failure(NSError(domain: "CloudflaredCLIError", code: Int(status), userInfo: [NSLocalizedDescriptionKey: errorMsg])))
              }
          }
         do {
              try process.run()
-             print("   Tarayıcıda Cloudflare giriş sayfası açılmalı veya zaten giriş yapılmış.")
+             print(NSLocalizedString("   Cloudflare login page should open in browser, or you are already logged in.", comment: "Log message: Cloudflare login page should open or user already logged in."))
          } catch {
-             print("❌ Cloudflare giriş işlemi başlatılamadı: \(error)")
+             print(String(format: NSLocalizedString("❌ Failed to start Cloudflare login process: %@", comment: "Log message: Failed to start Cloudflare login process. Parameter is error."), error.localizedDescription))
              completion(.failure(error))
          }
     }
@@ -963,18 +990,18 @@ class TunnelManager: ObservableObject {
      // MARK: - Quick Tunnel Management (Revised URL Detection)
     func startQuickTunnel(localURL: String, completion: @escaping (Result<UUID, Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: cloudflaredExecutablePath) else {
-            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "cloudflared bulunamadı: \(cloudflaredExecutablePath)"]))); return
+            completion(.failure(NSError(domain: "CloudflaredManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("cloudflared not found: %@", comment: "Error message: cloudflared not found for quick tunnel. Parameter is path."), cloudflaredExecutablePath)]))); return
         }
         guard let url = URL(string: localURL), url.scheme != nil, url.host != nil else {
-            completion(.failure(NSError(domain: "InputError", code: 10, userInfo: [NSLocalizedDescriptionKey: "Geçersiz yerel URL formatı. (örn: http://localhost:8000)"]))); return
+            completion(.failure(NSError(domain: "InputError", code: 10, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Invalid local URL format. (e.g., http://localhost:8000)", comment: "Error message: Invalid local URL format for quick tunnel.")]))); return
         }
 
-        print("🚀 Hızlı tünel başlatılıyor (Basit Arg): \(localURL)...")
+        print(String(format: NSLocalizedString("🚀 Starting quick tunnel (Simple Arg): %@...", comment: "Log message: Starting quick tunnel with simple argument. Parameter is local URL."), localURL))
         let process = Process()
         let tunnelID = UUID()
 
         process.executableURL = URL(fileURLWithPath: cloudflaredExecutablePath)
-        process.arguments = ["tunnel", "--url", localURL] // Basit argümanlar
+        process.arguments = ["tunnel", "--url", localURL] // Simple arguments
 
         let outputPipe = Pipe()
         let errorPipe = Pipe()
@@ -991,14 +1018,14 @@ class TunnelManager: ObservableObject {
                 pipeQueue.async {
                     bufferLock.lock()
                     combinedOutputBuffer += line
-                    // Sadece URL parse etmeyi dene, hata arama yok.
+                    // Only try to parse URL, no error searching here.
                     self.parseQuickTunnelOutput(outputBuffer: combinedOutputBuffer, tunnelID: tunnelID)
                     bufferLock.unlock()
                 }
             }
         }
 
-        // Handler'ları ayarla
+        // Set up handlers
         outputPipe.fileHandleForReading.readabilityHandler = { pipe in
             let data = pipe.availableData
             if data.isEmpty { pipe.readabilityHandler = nil } else { processOutput(data, "stdout") }
@@ -1020,11 +1047,11 @@ class TunnelManager: ObservableObject {
                          guard let self = self else { return }
                          let status = terminatedProcess.terminationStatus
                          let reason = terminatedProcess.terminationReason
-                         print("🏁 Hızlı tünel (\(tunnelID) - \(localURL)) sonlandı. Kod: \(status), Neden: \(reason == .exit ? "Exit" : "Signal")")
+                         print(String(format: NSLocalizedString("🏁 Quick tunnel (%1$@ - %2$@) finished. Code: %3$d, Reason: %4$@", comment: "Log message: Quick tunnel finished. Parameters are tunnel ID, local URL, exit code, exit reason."), tunnelID.uuidString, localURL, status, (reason == .exit ? "Exit" : "Signal")))
                         // if !finalCombinedOutput.isEmpty { print("   🏁 Son Buffer [\(tunnelID)]:\n---\n\(finalCombinedOutput)\n---") }
 
                          guard let index = self.quickTunnels.firstIndex(where: { $0.id == tunnelID }) else {
-                             print("   Termination handler: Quick tunnel \(tunnelID) listede bulunamadı.")
+                             print(String(format: NSLocalizedString("   Termination handler: Quick tunnel %@ not found in list.", comment: "Log message: Quick tunnel not found in list during termination. Parameter is tunnel ID."), tunnelID.uuidString))
                              self.runningQuickProcesses.removeValue(forKey: tunnelID)
                              return
                          }
@@ -1033,30 +1060,33 @@ class TunnelManager: ObservableObject {
                          let urlWasFound = tunnelData.publicURL != nil
                          let wasStoppedIntentionally = self.runningQuickProcesses[tunnelID] == nil || (reason == .exit && status == 0) || (reason == .uncaughtSignal && status == SIGTERM)
 
-                         // Hata Durumu: Sadece URL bulunamadıysa VE beklenmedik şekilde sonlandıysa
+                         // Error State: Only if URL was NOT found AND terminated unexpectedly
                          if !urlWasFound && !wasStoppedIntentionally && !(reason == .exit && status == 0) {
-                             print("   ‼️ Hızlı Tünel: URL bulunamadı ve beklenmedik şekilde sonlandı [\(tunnelID)].")
+                             print(String(format: NSLocalizedString("   ‼️ Quick Tunnel: URL not found and terminated unexpectedly [%@].", comment: "Log message: Quick tunnel URL not found and terminated unexpectedly. Parameter is tunnel ID."), tunnelID.uuidString))
                              let errorLines = finalCombinedOutput.split(separator: "\n").filter {
                                  $0.lowercased().contains("error") || $0.lowercased().contains("fail") || $0.lowercased().contains("fatal")
                              }.map(String.init)
                              var finalError = errorLines.prefix(3).joined(separator: "\n")
                              if finalError.isEmpty {
-                                 finalError = "İşlem URL bulunamadan sonlandı (Kod: \(status)). Çıktıyı kontrol edin."
+                                 finalError = String(format: NSLocalizedString("Process terminated before URL was found (Code: %d). Check output.", comment: "Error message: Process terminated before URL found. Parameter is exit code."), status)
                              }
-                             tunnelData.lastError = finalError // Hatayı ayarla
-                             print("   Hata mesajı ayarlandı: \(finalError)")
-                             // Hata bildirimi
-                             self.postUserNotification(identifier: "quick_fail_\(tunnelID)", title: "Hızlı Tünel Hatası", body: "\(localURL)\n\(finalError.prefix(100))...")
+                             tunnelData.lastError = finalError // Set error
+                             print(String(format: NSLocalizedString("   Error message set: %@", comment: "Log message: Error message set for quick tunnel. Parameter is error message."), finalError))
+                             // Error notification
+                             let errorTitle = NSLocalizedString("Quick Tunnel Error", comment: "Notification title: Quick tunnel error")
+                             let errorBody = String(format: NSLocalizedString("%1$@\n%2$@...", comment: "Notification body: Quick tunnel error. Parameters are local URL and truncated error message."), localURL, finalError.prefix(100) as CVarArg)
+                             self.postUserNotification(identifier: "quick_fail_\(tunnelID)", title: errorTitle, body: errorBody)
                          } else if wasStoppedIntentionally {
-                              print("   Hızlı tünel durduruldu veya normal sonlandı (\(tunnelID)).")
-                              // Başarılı durdurma bildirimi (URL bulunduysa veya temiz çıkışsa)
+                              print(String(format: NSLocalizedString("   Quick tunnel stopped or finished normally (%@).", comment: "Log message: Quick tunnel stopped or finished normally. Parameter is tunnel ID."), tunnelID.uuidString))
+                              // Successful stop notification (if URL was found or clean exit)
                               if urlWasFound || (reason == .exit && status == 0) {
-                                  self.postUserNotification(identifier: "quick_stopped_\(tunnelID)", title: "Hızlı Tünel Durduruldu", body: "\(localURL)")
+                                  let notificationTitle = NSLocalizedString("Quick Tunnel Stopped", comment: "Notification title: Quick tunnel stopped")
+                                  self.postUserNotification(identifier: "quick_stopped_\(tunnelID)", title: notificationTitle, body: localURL)
                               }
                          }
-                         // else: URL bulundu ve normal şekilde çalışmaya devam ediyordu (kapatma sinyali gelene kadar) - hata yok.
+                         // else: URL was found and it was running normally (until close signal) - no error.
 
-                         // Listeden ve haritadan kaldır
+                         // Remove from list and map
                          self.quickTunnels.remove(at: index)
                          self.runningQuickProcesses.removeValue(forKey: tunnelID)
                      }
@@ -1064,10 +1094,10 @@ class TunnelManager: ObservableObject {
 
 
 
-        // --- İşlemi başlatma kısmı ---
+        // --- Start process part ---
               do {
                   DispatchQueue.main.async {
-                       // Başlangıçta lastError = nil olsun
+                       // lastError should be nil initially
                        let tunnelData = QuickTunnelData(process: process, publicURL: nil, localURL: localURL, processIdentifier: nil, lastError: nil)
                        self.quickTunnels.append(tunnelData)
                        self.runningQuickProcesses[tunnelID] = process
@@ -1078,91 +1108,96 @@ class TunnelManager: ObservableObject {
                        if let index = self.quickTunnels.firstIndex(where: { $0.id == tunnelID }) {
                            self.quickTunnels[index].processIdentifier = pid
                        }
-                       print("   Hızlı tünel işlemi başlatıldı (PID: \(pid), ID: \(tunnelID)). Çıktı bekleniyor...")
+                       print(String(format: NSLocalizedString("   Quick tunnel process started (PID: %1$d, ID: %2$@). Waiting for output...", comment: "Log message: Quick tunnel process started. Parameters are PID and tunnel ID."), pid, tunnelID.uuidString))
                        completion(.success(tunnelID))
                   }
 
         } catch {
-            print("❌ Hızlı tünel işlemi başlatılamadı (try process.run() hatası): \(error)")
-            // Başlatma sırasında hata olursa temizle
+            print(String(format: NSLocalizedString("❌ Failed to start quick tunnel process (try process.run() error): %@", comment: "Log message: Failed to start quick tunnel process. Parameter is error."), error.localizedDescription))
+            // Clean up if start fails
             DispatchQueue.main.async {
                      self.quickTunnels.removeAll { $0.id == tunnelID }
                      self.runningQuickProcesses.removeValue(forKey: tunnelID)
-                     self.postUserNotification(identifier: "quick_start_run_fail_\(tunnelID)", title: "Hızlı Tünel Başlatma Hatası", body: "İşlem başlatılamadı: \(error.localizedDescription)")
+                     let errorTitle = NSLocalizedString("Quick Tunnel Start Error", comment: "Notification title: Error starting quick tunnel")
+                     let errorBody = String(format: NSLocalizedString("Failed to start process: %@", comment: "Notification body: Failed to start quick tunnel process. Parameter is error description."), error.localizedDescription)
+                     self.postUserNotification(identifier: "quick_start_run_fail_\(tunnelID)", title: errorTitle, body: errorBody)
                      completion(.failure(error))
                 }
                 outputPipe.fileHandleForReading.readabilityHandler = nil
                 errorPipe.fileHandleForReading.readabilityHandler = nil
            }
-       } /// startQuickTunnel Sonu
+       } /// End of startQuickTunnel
 
 
-    // Sadece URL arar, hata aramaz. URL bulursa durumu günceller.
+    // Only searches for URL, not errors. Updates status if URL is found.
     private func parseQuickTunnelOutput(outputBuffer: String, tunnelID: UUID) {
         var urlAlreadyFound = false
         DispatchQueue.main.sync {
             urlAlreadyFound = self.quickTunnels.first(where: { $0.id == tunnelID })?.publicURL != nil
         }
-        guard !urlAlreadyFound else { return } // Zaten bulunduysa çık
+        guard !urlAlreadyFound else { return } // Exit if already found
 
-        // URL Arama
+        // URL Search
                let urlPattern = #"(https?://[a-zA-Z0-9-]+.trycloudflare.com)"#
-               let establishedPattern = #"Tunnel established at\s+(\S+)"# // Veya "Visit it at ... URL" satırı
+               let establishedPattern = #"Tunnel established at\s+(\S+)"# // Or "Visit it at ... URL" line
                let visitPattern = #"Visit it at.*(https?://[a-zA-Z0-9-]+.trycloudflare.com)"#
                var foundURL: String? = nil
 
-               // Önce "established at" veya "Visit it at" satırlarını ara
+               // First search for "established at" or "Visit it at" lines
                if let establishedMatch = outputBuffer.range(of: establishedPattern, options: .regularExpression) {
                     if let urlRange = outputBuffer.range(of: urlPattern, options: .regularExpression, range: establishedMatch) {
                         foundURL = String(outputBuffer[urlRange])
                     }
                } else if let visitMatch = outputBuffer.range(of: visitPattern, options: .regularExpression) {
-                    // Regex'in yakaladığı 1. grup URL'dir
+                    // Regex's 1st capture group is the URL
                     let matchString = String(outputBuffer[visitMatch])
                     if let urlRange = matchString.range(of: urlPattern, options: .regularExpression) {
                          foundURL = String(matchString[urlRange])
                     }
                }
 
-        // URL Bulunduysa -> Durumu Güncelle (Ana Thread'de)
+        // If URL Found -> Update Status (on Main Thread)
         if let theURL = foundURL {
             DispatchQueue.main.async {
                 if let index = self.quickTunnels.firstIndex(where: { $0.id == tunnelID }), self.quickTunnels[index].publicURL == nil {
                     self.quickTunnels[index].publicURL = theURL
-                    self.quickTunnels[index].lastError = nil // Hata olmadığından emin ol
-                    print("   ☁️ Hızlı Tünel URL'si (\(tunnelID)): \(theURL)")
-                    self.postUserNotification(identifier: "quick_url_\(tunnelID)", title: "Hızlı Tünel Hazır", body: "\(self.quickTunnels[index].localURL)\n⬇️\n\(theURL)")
+                    self.quickTunnels[index].lastError = nil // Ensure no error
+                    print(String(format: NSLocalizedString("   ☁️ Quick Tunnel URL (%@): %@", comment: "Log message: Quick tunnel URL found. Parameters are tunnel ID and URL."), tunnelID.uuidString, theURL))
+                    let notificationTitle = NSLocalizedString("Quick Tunnel Ready", comment: "Notification title: Quick tunnel is ready")
+                    let notificationBody = String(format: NSLocalizedString("%1$@\n⬇️\n%2$@", comment: "Notification body: Quick tunnel ready. Parameters are local URL and public URL."), self.quickTunnels[index].localURL, theURL)
+                    self.postUserNotification(identifier: "quick_url_\(tunnelID)", title: notificationTitle, body: notificationBody)
                 }
             }
-            // URL bulunduktan sonra bu fonksiyondan çık (artık parse etmeye gerek yok)
+            // Exit this function after URL is found (no need to parse further)
         }
 
-        // --- Hata Arama (Sadece URL bulunamadıysa buraya gelinir) ---
+        // --- Error Search (Only come here if URL not found yet) ---
         let errorPatterns = [
             "error", "fail", "fatal", "cannot", "unable", "could not", "refused", "denied",
             "address already in use", "invalid tunnel credentials", "dns record creation failed"
-        ]
+        ].map { NSLocalizedString($0, comment: "Error keyword for parsing quick tunnel output: \($0)") } // Localize keywords if necessary, though likely stable
         var detectedError: String? = nil
         for errorPattern in errorPatterns {
-             // Tüm buffer'da hata deseni ara
-             if outputBuffer.lowercased().range(of: errorPattern) != nil {
-                 // Buffer'daki *son* ilgili satırı bulmaya çalış (daha anlamlı olabilir)
-                 let errorLine = outputBuffer.split(separator: "\n").last(where: { $0.lowercased().contains(errorPattern) })
-                 detectedError = String(errorLine ?? Substring("Hata algılandı: \(errorPattern)")).prefix(150).trimmingCharacters(in: .whitespacesAndNewlines)
-                 // print("   ‼️ Hata Deseni Algılandı [\(tunnelID)]: '\(errorPattern)' -> Mesaj: \(detectedError!)") // İsteğe bağlı debug logu
-                 break // İlk bulunan hatayı al ve çık
+             // Search for error pattern in the whole buffer
+             if outputBuffer.lowercased().range(of: errorPattern.lowercased()) != nil {
+                 // Try to find the *last* relevant line in the buffer (might be more meaningful)
+                 let errorLine = outputBuffer.split(separator: "\n").last(where: { $0.lowercased().contains(errorPattern.lowercased()) })
+                 detectedError = String(errorLine ?? Substring(String(format: NSLocalizedString("Error detected: %@", comment: "Generic error detected message. Parameter is the error pattern."), errorPattern)))
+                                    .prefix(150).trimmingCharacters(in: .whitespacesAndNewlines)
+                 // print("   ‼️ Hata Deseni Algılandı [\(tunnelID)]: '\(errorPattern)' -> Mesaj: \(detectedError!)") // Optional debug log
+                 break // Take the first error found and exit
              }
         }
 
-        // Eğer hata algılandıysa, ana thread'de durumu güncelle
+        // If an error was detected, update status on main thread
         if let finalError = detectedError {
             DispatchQueue.main.async {
-                // URL'nin hala bulunmadığından emin ol
+                // Ensure URL is still not found
                 if let index = self.quickTunnels.firstIndex(where: { $0.id == tunnelID }), self.quickTunnels[index].publicURL == nil {
-                    // Sadece mevcut hata boşsa veya 'Başlatılıyor...' ise güncelle
-                    if self.quickTunnels[index].lastError == nil || self.quickTunnels[index].lastError == "Başlatılıyor..." {
+                    // Only update if current error is nil or "Starting..."
+                    if self.quickTunnels[index].lastError == nil || self.quickTunnels[index].lastError == NSLocalizedString("Starting...", comment: "Initial status for quick tunnel error before specific error is found") {
                          self.quickTunnels[index].lastError = finalError
-                         print("   Hızlı Tünel Başlatma Hatası Güncellendi (\(tunnelID)): \(finalError)")
+                         print(String(format: NSLocalizedString("   Quick Tunnel Start Error Updated (%@): %@", comment: "Log message: Quick tunnel start error updated. Parameters are tunnel ID and error message."), tunnelID.uuidString, finalError))
                     }
                 }
             }
@@ -1172,22 +1207,22 @@ class TunnelManager: ObservableObject {
      func stopQuickTunnel(id: UUID) {
          DispatchQueue.main.async { // Ensure access to quickTunnels and runningQuickProcesses is synchronized
               guard let process = self.runningQuickProcesses[id] else {
-                  print("❓ Durdurulacak hızlı tünel işlemi bulunamadı: \(id)")
+                  print(String(format: NSLocalizedString("❓ Quick tunnel process to stop not found: %@", comment: "Log message: Quick tunnel process to stop not found. Parameter is tunnel ID."), id.uuidString))
                   if let index = self.quickTunnels.firstIndex(where: { $0.id == id }) {
-                      print("   Listeden de kaldırılıyor.")
+                      print(NSLocalizedString("   Also removing from list.", comment: "Log message suffix: Also removing from quick tunnel list."))
                       self.quickTunnels.remove(at: index) // Remove lingering data if process gone
                   }
                   return
               }
 
               guard let tunnelData = self.quickTunnels.first(where: { $0.id == id }) else {
-                   print("❓ Durdurulacak hızlı tünel verisi bulunamadı (process var ama veri yok): \(id)")
+                   print(String(format: NSLocalizedString("❓ Quick tunnel data to stop not found (process exists but data missing): %@", comment: "Log message: Quick tunnel data to stop not found. Parameter is tunnel ID."), id.uuidString))
                    self.runningQuickProcesses.removeValue(forKey: id)
                    process.terminate() // Terminate process anyway
                    return
               }
 
-              print("🛑 Hızlı tünel durduruluyor: \(tunnelData.localURL) (\(id)) PID: \(process.processIdentifier)")
+              print(String(format: NSLocalizedString("🛑 Stopping quick tunnel: %@ (%@) PID: %d", comment: "Log message: Stopping quick tunnel. Parameters are local URL, tunnel ID, PID."), tunnelData.localURL, id.uuidString, process.processIdentifier))
               // Remove from map *before* terminating to signal intent
               self.runningQuickProcesses.removeValue(forKey: id)
               process.terminate() // Send SIGTERM
@@ -1197,39 +1232,39 @@ class TunnelManager: ObservableObject {
 
     // MARK: - Bulk Actions
     func startAllManagedTunnels() {
-        print("--- Tüm Yönetilenleri Başlat ---")
+        print(NSLocalizedString("--- Start All Managed ---", comment: "Log section header: Start All Managed Tunnels"))
          DispatchQueue.main.async {
              let tunnelsToStart = self.tunnels.filter { $0.isManaged && ($0.status == .stopped || $0.status == .error) }
-             if tunnelsToStart.isEmpty { print("   Başlatılacak yönetilen tünel yok."); return }
-             print("   Başlatılacak tüneller: \(tunnelsToStart.map { $0.name })")
+             if tunnelsToStart.isEmpty { print(NSLocalizedString("   No managed tunnels to start.", comment: "Log message: No managed tunnels to start.")); return }
+             print(String(format: NSLocalizedString("   Tunnels to start: %@", comment: "Log message: List of tunnels to start. Parameter is list of names."), tunnelsToStart.map { $0.name }.joined(separator: ", ")))
              tunnelsToStart.forEach { self.startManagedTunnel($0) }
          }
     }
 
     func stopAllTunnels(synchronous: Bool = false) {
-        print("--- Tüm Tünelleri Durdur (\(synchronous ? "Senkron" : "Asenkron")) ---")
+        print(String(format: NSLocalizedString("--- Stop All Tunnels (%@) ---", comment: "Log section header: Stop All Tunnels. Parameter is sync/async."), (synchronous ? NSLocalizedString("Synchronous", comment: "Synchronous mode for stopping tunnels") : NSLocalizedString("Asynchronous", comment: "Asynchronous mode for stopping tunnels"))))
         var didStopSomething = false
 
         DispatchQueue.main.async { // Ensure array/dict access is safe
             // Stop Managed Tunnels
             let configPathsToStop = Array(self.runningManagedProcesses.keys)
             if !configPathsToStop.isEmpty {
-                print("   Yönetilen tüneller durduruluyor...")
+                print(NSLocalizedString("   Stopping managed tunnels...", comment: "Log message: Stopping managed tunnels."))
                 for configPath in configPathsToStop {
                     if let tunnelInfo = self.tunnels.first(where: { $0.configPath == configPath }) {
                         self.stopManagedTunnel(tunnelInfo, synchronous: synchronous)
                         didStopSomething = true
                     } else {
-                        print("⚠️ Çalışan process (\(configPath)) listede değil, yine de durduruluyor...")
+                        print(String(format: NSLocalizedString("⚠️ Running process (%@) not in list, stopping anyway...", comment: "Log message: Running process not in list, stopping it. Parameter is config path."), configPath))
                         if let process = self.runningManagedProcesses.removeValue(forKey: configPath) {
                             if synchronous { _ = self.stopProcessAndWait(process, timeout: 2.0) } else { process.terminate() }
                             didStopSomething = true
                         }
                     }
                 }
-                if synchronous { print("--- Senkron yönetilen durdurmalar tamamlandı (veya sinyal gönderildi) ---") }
+                if synchronous { print(NSLocalizedString("--- Synchronous managed stops complete (or signal sent) ---", comment: "Log message: Synchronous managed tunnel stops complete.")) }
             } else {
-                print("   Çalışan yönetilen tünel yok.")
+                print(NSLocalizedString("   No running managed tunnels.", comment: "Log message: No running managed tunnels."))
                  // Ensure UI consistency
                  self.tunnels.indices.filter{ self.tunnels[$0].isManaged && [.running, .stopping, .starting].contains(self.tunnels[$0].status) }
                                    .forEach { idx in
@@ -1240,16 +1275,16 @@ class TunnelManager: ObservableObject {
             // Stop Quick Tunnels (Always Asynchronous via stopQuickTunnel)
             let quickTunnelIDsToStop = Array(self.runningQuickProcesses.keys)
             if !quickTunnelIDsToStop.isEmpty {
-                print("   Hızlı tüneller durduruluyor...")
+                print(NSLocalizedString("   Stopping quick tunnels...", comment: "Log message: Stopping quick tunnels."))
                 for id in quickTunnelIDsToStop {
                     self.stopQuickTunnel(id: id)
                     didStopSomething = true
                 }
             } else {
-                 print("   Çalışan hızlı tünel yok.")
+                 print(NSLocalizedString("   No running quick tunnels.", comment: "Log message: No running quick tunnels."))
                  // Ensure UI consistency
                  if !self.quickTunnels.isEmpty {
-                     print("   ⚠️ Çalışan hızlı tünel işlemi yok ama listede eleman var, temizleniyor.")
+                     print(NSLocalizedString("   ⚠️ No running quick tunnel processes but list is not empty, clearing.", comment: "Log message: Quick tunnel list not empty but no processes running, clearing list."))
                      self.quickTunnels.removeAll()
                  }
             }
@@ -1257,8 +1292,8 @@ class TunnelManager: ObservableObject {
             if didStopSomething {
                  // Send notification after a brief delay to allow termination handlers to potentially run
                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                      let title = "Tüm Tüneller Durduruldu"
-                      let body = synchronous ? "(Senkron durdurma denendi)" : nil
+                      let title = NSLocalizedString("All Tunnels Stopped", comment: "Notification title: All tunnels stopped")
+                      let body = synchronous ? NSLocalizedString("(Synchronous stop attempted)", comment: "Notification body suffix: Synchronous stop attempted") : nil
                       self?.postUserNotification(identifier: "all_stopped", title: title, body: body)
                  }
             }
@@ -1277,30 +1312,30 @@ class TunnelManager: ObservableObject {
              if let process = self.runningManagedProcesses[configPath] {
                  if process.isRunning {
                      if currentTunnelState.status != .running && currentTunnelState.status != .starting {
-                         print("🔄 Durum düzeltildi (Check): \(currentTunnelState.name) (\(currentTunnelState.status.displayName)) -> Çalışıyor")
+                         print(String(format: NSLocalizedString("🔄 Status corrected (Check): %@ (%@) -> Running", comment: "Log message: Corrected tunnel status to Running. Parameters are tunnel name and old status."), currentTunnelState.name, currentTunnelState.status.displayName))
                          self.tunnels[index].status = .running
                          self.tunnels[index].processIdentifier = process.processIdentifier
                          self.tunnels[index].lastError = nil
                      } else if currentTunnelState.status == .running && currentTunnelState.processIdentifier != process.processIdentifier {
-                          print("🔄 PID düzeltildi (Check): \(currentTunnelState.name) \(currentTunnelState.processIdentifier ?? -1) -> \(process.processIdentifier)")
+                          print(String(format: NSLocalizedString("🔄 PID corrected (Check): %@ %d -> %d", comment: "Log message: Corrected tunnel PID. Parameters are tunnel name, old PID, new PID."), currentTunnelState.name, currentTunnelState.processIdentifier ?? -1, process.processIdentifier))
                           self.tunnels[index].processIdentifier = process.processIdentifier
                      }
                  } else { // Process in map but not running (unexpected termination)
-                     print("⚠️ Kontrol: \(currentTunnelState.name) işlemi haritada ama çalışmıyor! Termination handler bunu yakalamalıydı. Temizleniyor.")
+                     print(String(format: NSLocalizedString("⚠️ Check: %@ process in map but not running! Termination handler should have caught this. Cleaning up.", comment: "Log message: Process in map but not running. Parameter is tunnel name."), currentTunnelState.name))
                      self.runningManagedProcesses.removeValue(forKey: configPath)
                      if currentTunnelState.status == .running || currentTunnelState.status == .starting {
                          self.tunnels[index].status = .error
-                         if self.tunnels[index].lastError == nil { self.tunnels[index].lastError = "İşlem beklenmedik şekilde sonlandı (haritada bulundu ama çalışmıyor)." }
-                         print("   Durum -> Hata (Check)")
+                         if self.tunnels[index].lastError == nil { self.tunnels[index].lastError = NSLocalizedString("Process terminated unexpectedly (found in map but not running).", comment: "Error message: Process found in map but not running.") }
+                         print(NSLocalizedString("   Status -> Error (Check)", comment: "Log message suffix: Status changed to Error during check."))
                      } else if currentTunnelState.status == .stopping {
                          self.tunnels[index].status = .stopped
-                          print("   Durum -> Durduruldu (Check)")
+                          print(NSLocalizedString("   Status -> Stopped (Check)", comment: "Log message suffix: Status changed to Stopped during check."))
                      }
                      self.tunnels[index].processIdentifier = nil
                  }
              } else { // Process not in map
                  if currentTunnelState.status == .running || currentTunnelState.status == .starting || currentTunnelState.status == .stopping {
-                     print("🔄 Durum düzeltildi (Check): \(currentTunnelState.name) işlemi haritada yok -> Durduruldu")
+                     print(String(format: NSLocalizedString("🔄 Status corrected (Check): %@ process not in map -> Stopped", comment: "Log message: Corrected tunnel status to Stopped (process not in map). Parameter is tunnel name."), currentTunnelState.name))
                      self.tunnels[index].status = .stopped
                      self.tunnels[index].processIdentifier = nil
                  }
@@ -1322,14 +1357,14 @@ class TunnelManager: ObservableObject {
         let url = URL(fileURLWithPath: cloudflaredDirectoryPath)
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
-             print("❌ İzleme başlatılamadı: Dizin yok veya dizin değil - \(url.path)")
+             print(String(format: NSLocalizedString("❌ Monitoring could not be started: Directory does not exist or is not a directory - %@", comment: "Log message: Failed to start directory monitoring. Parameter is path."), url.path))
              findManagedTunnels() // Try to create it
              // Consider retrying monitoring setup later if needed
              return
         }
         let fileDescriptor = Darwin.open((url as NSURL).fileSystemRepresentation, O_EVTONLY)
         guard fileDescriptor >= 0 else {
-            print("❌ Hata: \(cloudflaredDirectoryPath) izleme için açılamadı. Errno: \(errno) (\(String(cString: strerror(errno))))"); return
+            print(String(format: NSLocalizedString("❌ Error: Could not open %@ for monitoring. Errno: %d (%@)", comment: "Log message: Error opening directory for monitoring. Parameters are path, errno, strerror."), cloudflaredDirectoryPath, errno, String(cString: strerror(errno)))); return
         }
 
         directoryMonitor?.cancel()
@@ -1338,7 +1373,7 @@ class TunnelManager: ObservableObject {
         directoryMonitor?.setEventHandler { [weak self] in
             self?.monitorDebounceTimer?.invalidate()
             self?.monitorDebounceTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { _ in
-                print("📂 Değişiklik algılandı: \(self?.cloudflaredDirectoryPath ?? "") -> Yönetilen Tünel listesi yenileniyor.")
+                print(String(format: NSLocalizedString("📂 Change detected: %@ -> Refreshing managed tunnel list.", comment: "Log message: Change detected in directory, refreshing list. Parameter is directory path."), self?.cloudflaredDirectoryPath ?? ""))
                  DispatchQueue.main.async { self?.findManagedTunnels() }
             }
              if let timer = self?.monitorDebounceTimer { RunLoop.main.add(timer, forMode: .common) }
@@ -1346,13 +1381,13 @@ class TunnelManager: ObservableObject {
 
         directoryMonitor?.setCancelHandler { close(fileDescriptor) }
         directoryMonitor?.resume()
-        print("👀 Dizin izleme başlatıldı: \(cloudflaredDirectoryPath)")
+        print(String(format: NSLocalizedString("👀 Directory monitoring started: %@", comment: "Log message: Directory monitoring started. Parameter is path."), cloudflaredDirectoryPath))
     }
 
     func stopMonitoringCloudflaredDirectory() {
         monitorDebounceTimer?.invalidate(); monitorDebounceTimer = nil
         if directoryMonitor != nil {
-             print("🛑 Dizin izleme durduruluyor: \(cloudflaredDirectoryPath)")
+             print(String(format: NSLocalizedString("🛑 Stopping directory monitoring: %@", comment: "Log message: Stopping directory monitoring. Parameter is path."), cloudflaredDirectoryPath))
              directoryMonitor?.cancel(); directoryMonitor = nil
         }
     }
@@ -1360,7 +1395,7 @@ class TunnelManager: ObservableObject {
      // MARK: - MAMP Integration Helpers
      func scanMampSitesFolder() -> [String] {
          guard FileManager.default.fileExists(atPath: mampSitesDirectoryPath) else {
-             print("❌ MAMP site dizini bulunamadı: \(mampSitesDirectoryPath)")
+             print(String(format: NSLocalizedString("❌ MAMP site directory not found: %@", comment: "Log message: MAMP site directory not found. Parameter is path."), mampSitesDirectoryPath))
              return []
          }
          var siteFolders: [String] = []
@@ -1373,31 +1408,31 @@ class TunnelManager: ObservableObject {
                      siteFolders.append(item)
                  }
              }
-         } catch { print("❌ MAMP site dizini taranamadı: \(mampSitesDirectoryPath) - \(error)") }
+         } catch { print(String(format: NSLocalizedString("❌ Could not scan MAMP site directory: %@ - %@", comment: "Log message: Error scanning MAMP site directory. Parameters are path and error."), mampSitesDirectoryPath, error.localizedDescription)) }
          return siteFolders.sorted()
      }
 
-    // updateMampVHost fonksiyonunu tamamen değiştirin
-    // updateMampVHost fonksiyonunu tamamen değiştirin (Hata düzeltmesi dahil)
+    // updateMampVHost function completely replaced
+    // updateMampVHost function completely replaced (Including bug fix)
     func updateMampVHost(serverName: String, documentRoot: String, port: String, completion: @escaping (Result<Void, Error>) -> Void) {
         guard FileManager.default.fileExists(atPath: documentRoot) else {
-            completion(.failure(NSError(domain: "VHostError", code: 20, userInfo: [NSLocalizedDescriptionKey: "DocumentRoot bulunamadı: \(documentRoot)"]))); return
+            completion(.failure(NSError(domain: "VHostError", code: 20, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("DocumentRoot not found: %@", comment: "Error message: DocumentRoot not found for MAMP vHost. Parameter is path."), documentRoot)]))); return
         }
         guard !serverName.isEmpty && serverName.contains(".") else {
-            completion(.failure(NSError(domain: "VHostError", code: 21, userInfo: [NSLocalizedDescriptionKey: "Geçersiz ServerName: \(serverName)"]))); return
+            completion(.failure(NSError(domain: "VHostError", code: 21, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Invalid ServerName: %@", comment: "Error message: Invalid ServerName for MAMP vHost. Parameter is server name."), serverName)]))); return
         }
-        // Port numarasının geçerli olup olmadığını kontrol et (ekstra güvenlik)
+        // Check if port number is valid (extra safety)
         guard let portInt = Int(port), (1...65535).contains(portInt) else {
-            completion(.failure(NSError(domain: "VHostError", code: 25, userInfo: [NSLocalizedDescriptionKey: "Geçersiz Port Numarası: \(port)"]))); return
+            completion(.failure(NSError(domain: "VHostError", code: 25, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Invalid Port Number: %@", comment: "Error message: Invalid port number for MAMP vHost. Parameter is port."), port)]))); return
         }
-        let listenDirective = "*:\(port)" // Dinleme direktifini oluştur
+        let listenDirective = "*:\(port)" // Create listen directive
 
         let vhostDir = (mampVHostConfPath as NSString).deletingLastPathComponent
         var isDir : ObjCBool = false
         if !FileManager.default.fileExists(atPath: vhostDir, isDirectory: &isDir) || !isDir.boolValue {
-            print("⚠️ MAMP vHost dizini bulunamadı, oluşturuluyor: \(vhostDir)")
+            print(String(format: NSLocalizedString("⚠️ MAMP vHost directory not found, creating: %@", comment: "Log message: MAMP vHost directory not found, creating it. Parameter is path."), vhostDir))
             do { try FileManager.default.createDirectory(atPath: vhostDir, withIntermediateDirectories: true, attributes: nil) } catch {
-                 completion(.failure(NSError(domain: "VHostError", code: 22, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dizini oluşturulamadı: \(vhostDir)\n\(error.localizedDescription)"]))); return
+                 completion(.failure(NSError(domain: "VHostError", code: 22, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Could not create MAMP vHost directory: %@\n%@", comment: "Error message: Failed to create MAMP vHost directory. Parameters are path and error."), vhostDir, error.localizedDescription)]))); return
             }
         }
 
@@ -1423,64 +1458,64 @@ class TunnelManager: ObservableObject {
             if FileManager.default.fileExists(atPath: mampVHostConfPath) {
                 currentContent = try String(contentsOfFile: mampVHostConfPath, encoding: .utf8)
             } else {
-                print("⚠️ vHost dosyası bulunamadı, yeni dosya oluşturulacak: \(mampVHostConfPath)")
-                // Yeni dosya oluşturuluyorsa NameVirtualHost direktifini ekle
+                print(String(format: NSLocalizedString("⚠️ vHost file not found, new file will be created: %@", comment: "Log message: vHost file not found, will create new. Parameter is path."), mampVHostConfPath))
+                // Add NameVirtualHost directive if creating a new file
                 currentContent = "# Virtual Hosts\nNameVirtualHost \(listenDirective)\n\n"
             }
 
-            // --- BAŞLANGIÇ: Düzeltilmiş vHost Var mı Kontrolü ---
+            // --- START: Corrected vHost Exists Check ---
             let serverNamePattern = #"ServerName\s+\Q\#(serverName)\E"#
-            // Noktanın yeni satırları da eşleştirmesi için (?s) flag'i yerine NSRegularExpression kullanıyoruz.
-            // Desen: <VirtualHost *:PORT> ... ServerName SERVER ... </VirtualHost>
+            // Using NSRegularExpression for .dotMatchesLineSeparators instead of (?s) flag
+            // Pattern: <VirtualHost *:PORT> ... ServerName SERVER ... </VirtualHost>
             let vhostBlockPattern = #"<VirtualHost\s+\*\:\#(port)>.*?\#(serverNamePattern).*?</VirtualHost>"#
 
             do {
-                // NSRegularExpression oluştur, .dotMatchesLineSeparators seçeneği ile
+                // Create NSRegularExpression with .dotMatchesLineSeparators option
                 let regex = try NSRegularExpression(
                     pattern: vhostBlockPattern,
-                    options: [.dotMatchesLineSeparators] // Bu seçenek NSRegularExpression'da mevcut
+                    options: [.dotMatchesLineSeparators] // This option is available in NSRegularExpression
                 )
 
-                // Tüm içerikte ara
+                // Search in the entire content
                 let searchRange = NSRange(currentContent.startIndex..<currentContent.endIndex, in: currentContent)
                 if regex.firstMatch(in: currentContent, options: [], range: searchRange) != nil {
-                    // Eşleşme bulunduysa, giriş zaten var demektir.
-                    print("ℹ️ MAMP vHost dosyası zaten '\(serverName)' için \(listenDirective) portunda giriş içeriyor. Güncelleme yapılmadı.")
+                    // Match found, entry already exists.
+                    print(String(format: NSLocalizedString("ℹ️ MAMP vHost file already contains entry for '%@' on port %@. No update made.", comment: "Log message: MAMP vHost entry already exists. Parameters are server name and listen directive."), serverName, listenDirective))
                     completion(.success(()))
-                    return // Fonksiyondan çık
+                    return // Exit function
                 }
-                // Eşleşme bulunamadı, devam et...
+                // No match found, continue...
             } catch {
-                // Regex oluşturma hatası (desen bozuksa olabilir, ama burada pek olası değil)
-                print("❌ Regex Hatası: \(error.localizedDescription) - Desen: \(vhostBlockPattern)")
-                completion(.failure(NSError(domain: "VHostError", code: 26, userInfo: [NSLocalizedDescriptionKey: "vHost kontrolü için regex oluşturulamadı: \(error.localizedDescription)"])))
+                // Regex creation error (unlikely here if pattern is correct)
+                print(String(format: NSLocalizedString("❌ Regex Error: %@ - Pattern: %@", comment: "Log message: Regex error. Parameters are error description and pattern."), error.localizedDescription, vhostBlockPattern))
+                completion(.failure(NSError(domain: "VHostError", code: 26, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Could not create regex for vHost check: %@", comment: "Error message: Failed to create regex for vHost check. Parameter is error."), error.localizedDescription)])))
                 return
             }
-            // --- BİTİŞ: Düzeltilmiş vHost Var mı Kontrolü ---
+            // --- END: Corrected vHost Exists Check ---
 
 
-            // Eğer NameVirtualHost direktifi eksikse ve dosya boş değilse, ekle
+            // If NameVirtualHost directive is missing and file is not empty, add it
             if !currentContent.contains("NameVirtualHost \(listenDirective)") && !currentContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                if !currentContent.contains("NameVirtualHost ") { // Hiç NameVirtualHost yoksa
+                if !currentContent.contains("NameVirtualHost ") { // If no NameVirtualHost at all
                     currentContent = "# Virtual Hosts\nNameVirtualHost \(listenDirective)\n\n" + currentContent
                 } else {
-                    print("⚠️ Uyarı: vHost dosyasında başka NameVirtualHost direktifleri var. '\(listenDirective)' için direktif eklenmiyor. Manuel kontrol gerekebilir.")
+                    print(String(format: NSLocalizedString("⚠️ Warning: Other NameVirtualHost directives exist in vHost file. Directive for '%@' not added. Manual check may be required.", comment: "Log message: Other NameVirtualHost directives exist. Parameter is listen directive."), listenDirective))
                 }
             }
 
 
             let newContent = currentContent + vhostEntry
             try newContent.write(toFile: mampVHostConfPath, atomically: true, encoding: .utf8)
-            print("✅ MAMP vHost dosyası güncellendi: \(mampVHostConfPath) (Port: \(port))")
+            print(String(format: NSLocalizedString("✅ MAMP vHost file updated: %@ (Port: %@)", comment: "Log message: MAMP vHost file updated. Parameters are path and port."), mampVHostConfPath, port))
             completion(.success(()))
 
         } catch {
-            print("❌ MAMP vHost dosyası güncellenirken HATA: \(error)")
+            print(String(format: NSLocalizedString("❌ ERROR updating MAMP vHost file: %@", comment: "Log message: Error updating MAMP vHost file. Parameter is error."), error.localizedDescription))
             let nsError = error as NSError
             if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteNoPermissionError {
-                 completion(.failure(NSError(domain: "VHostError", code: 23, userInfo: [NSLocalizedDescriptionKey: "Yazma izni hatası: MAMP vHost dosyası güncellenemedi (\(mampVHostConfPath)). Lütfen dosya izinlerini kontrol edin veya manuel olarak ekleyin.\n\(error.localizedDescription)"])))
+                 completion(.failure(NSError(domain: "VHostError", code: 23, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Write permission error: MAMP vHost file could not be updated (%@). Please check file permissions or add manually.\n%@", comment: "Error message: Write permission error for MAMP vHost. Parameters are path and error."), mampVHostConfPath, error.localizedDescription)])))
             } else {
-                 completion(.failure(NSError(domain: "VHostError", code: 24, userInfo: [NSLocalizedDescriptionKey: "MAMP vHost dosyasına yazılamadı:\n\(error.localizedDescription)"])))
+                 completion(.failure(NSError(domain: "VHostError", code: 24, userInfo: [NSLocalizedDescriptionKey: String(format: NSLocalizedString("Could not write to MAMP vHost file:\n%@", comment: "Error message: Failed to write to MAMP vHost file. Parameter is error."), error.localizedDescription)])))
             }
         }
     }
@@ -1494,7 +1529,7 @@ class TunnelManager: ObservableObject {
                  let service = SMAppService.mainApp
                  let currentStateEnabled = service.status == .enabled
                  let newStateEnabled = !currentStateEnabled
-                 print("Oturum açıldığında başlatma: \(newStateEnabled ? "Etkinleştiriliyor" : "Devre Dışı Bırakılıyor")")
+                 print(String(format: NSLocalizedString("Launch at login: %@", comment: "Log message: Launch at login status change. Parameter is 'Enabling' or 'Disabling'."), (newStateEnabled ? NSLocalizedString("Enabling", comment: "Action: Enabling launch at login") : NSLocalizedString("Disabling", comment: "Action: Disabling launch at login"))))
 
                  if newStateEnabled {
                      try service.register()
@@ -1504,14 +1539,14 @@ class TunnelManager: ObservableObject {
                  // Verify state *after* operation
                  let finalStateEnabled = SMAppService.mainApp.status == .enabled
                  if finalStateEnabled == newStateEnabled {
-                     print("   ✅ Oturum açıldığında başlatma durumu güncellendi: \(finalStateEnabled)")
+                     print(String(format: NSLocalizedString("   ✅ Launch at login status updated: %@", comment: "Log message: Launch at login status updated successfully. Parameter is new status (true/false)."), String(describing: finalStateEnabled)))
                      completion(.success(finalStateEnabled))
                  } else {
-                      print("❌ Oturum açıldığında başlatma durumu değiştirilemedi (beklenen: \(newStateEnabled), sonuç: \(finalStateEnabled)).")
-                      completion(.failure(NSError(domain: "ServiceManagement", code: -1, userInfo: [NSLocalizedDescriptionKey: "İşlem sonrası durum doğrulaması başarısız oldu."])))
+                     print(String(format: NSLocalizedString("❌ Launch at login status could not be changed (expected: %@, result: %@).", comment: "Log message: Failed to change launch at login status. Parameters are expected status and actual status."), String(describing: newStateEnabled), String(describing: finalStateEnabled)))
+                     completion(.failure(NSError(domain: "ServiceManagement", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("Post-operation status verification failed.", comment: "Error message: Launch at login status verification failed.")])))
                  }
              } catch {
-                 print("❌ Oturum açıldığında başlatma değiştirilemedi: \(error)")
+                 print(String(format: NSLocalizedString("❌ Could not change launch at login: %@", comment: "Log message: Error changing launch at login. Parameter is error."), error.localizedDescription))
                  completion(.failure(error))
              }
          }

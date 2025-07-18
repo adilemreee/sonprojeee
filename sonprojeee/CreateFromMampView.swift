@@ -77,7 +77,7 @@ struct ModernAlertView: View {
                     action()
                 }
             }) {
-                Text("Tamam")
+                Text(NSLocalizedString("OK", comment: "Button title in ModernAlertView"))
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(width: 120, height: 36)
@@ -160,7 +160,7 @@ struct CreateFromMampView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("MAMP Sitesinden Tünel Oluştur")
+                Text(NSLocalizedString("Create Tunnel from MAMP Site", comment: "View title: Create tunnel from MAMP site"))
                     .font(.title2)
                     .fontWeight(.bold)
                 Spacer()
@@ -178,11 +178,11 @@ struct CreateFromMampView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         // Site Selection
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("MAMP Sitesi")
+                            Text(NSLocalizedString("MAMP Site", comment: "Label for MAMP site picker"))
                                 .font(.headline)
                             
                             Picker("", selection: $selectedSite) {
-                                Text("-- Seçiniz --").tag("")
+                                Text(NSLocalizedString("-- Select --", comment: "Default placeholder for MAMP site picker")).tag("")
                                 ForEach(mampSites, id: \.self) { Text($0).tag($0) }
                             }
                             .pickerStyle(.menu)
@@ -191,11 +191,11 @@ struct CreateFromMampView: View {
 
                         // Document Root Display
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Proje Kökü")
+                            Text(NSLocalizedString("Project Root", comment: "Label for project root display"))
                                 .font(.headline)
                             
                             HStack {
-                                Text(documentRoot.isEmpty ? "(Site Seçin)" : (documentRoot as NSString).abbreviatingWithTildeInPath)
+                                Text(documentRoot.isEmpty ? NSLocalizedString("(Select Site)", comment: "Placeholder text when no MAMP site is selected for document root") : (documentRoot as NSString).abbreviatingWithTildeInPath)
                                     .font(.system(.body, design: .monospaced))
                                     .foregroundColor(documentRoot.isEmpty || documentRootExists ? .secondary : .red)
                                     .lineLimit(1)
@@ -204,7 +204,7 @@ struct CreateFromMampView: View {
                                 if !documentRoot.isEmpty {
                                     Image(systemName: documentRootExists ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                                         .foregroundColor(documentRootExists ? .green : .red)
-                                        .help(documentRootExists ? "Dizin bulundu." : "Dizin bulunamadı!")
+                                        .help(documentRootExists ? NSLocalizedString("Directory found.", comment: "Tooltip: Document root directory found") : NSLocalizedString("Directory not found!", comment: "Tooltip: Document root directory not found"))
                                 }
                             }
                             .padding(6)
@@ -220,20 +220,20 @@ struct CreateFromMampView: View {
 
                     // Right Column - Tunnel Details
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Tünel Detayları")
+                        Text(NSLocalizedString("Tunnel Details", comment: "Section header for tunnel details in MAMP creation form"))
                             .font(.headline)
                             .padding(.horizontal)
 
                         VStack(spacing: 8) {
-                            FormField(label: "Tünel Adı", text: $tunnelName, placeholder: "Cloudflare'deki Ad (boşluksuz)")
-                            FormField(label: "Config Adı", text: $configName, placeholder: "Yerel .yml Dosya Adı")
-                            FormField(label: "Hostname", text: $hostname, placeholder: "Erişilecek Alan Adı")
-                                .help("DNS kaydını Cloudflare'de oluşturmanız gerekebilir.")
+                            FormField(label: NSLocalizedString("Tunnel Name", comment: "Form field label: Tunnel Name in MAMP creation"), text: $tunnelName, placeholder: NSLocalizedString("Name on Cloudflare (no spaces)", comment: "Placeholder for tunnel name in MAMP creation"))
+                            FormField(label: NSLocalizedString("Config Name", comment: "Form field label: Config Name in MAMP creation"), text: $configName, placeholder: NSLocalizedString("Local .yml File Name", comment: "Placeholder for config file name in MAMP creation"))
+                            FormField(label: NSLocalizedString("Hostname", comment: "Form field label: Hostname in MAMP creation"), text: $hostname, placeholder: NSLocalizedString("Domain to access", comment: "Placeholder for hostname in MAMP creation"))
+                                .help(NSLocalizedString("You may need to create the DNS record in Cloudflare.", comment: "Help text for hostname field in MAMP creation"))
                             
                             HStack {
-                                Text("Yerel Port")
+                                Text(NSLocalizedString("Local Port", comment: "Form field label: Local Port in MAMP creation"))
                                     .frame(width: 100, alignment: .trailing)
-                                TextField("Port (örn: 8888)", text: $portString)
+                                TextField(NSLocalizedString("Port (e.g., 8888)", comment: "Placeholder for local port input in MAMP creation"), text: $portString)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(maxWidth: 100)
                                     .onChange(of: portString) { newValue in
@@ -256,7 +256,7 @@ struct CreateFromMampView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "info.circle.fill")
                         .foregroundColor(.blue)
-                    Text("Not: Bu işlem MAMP vHost dosyasını otomatik güncellemeyi dener. MAMP'ı yeniden başlatmanız gerekir.")
+                    Text(NSLocalizedString("Note: This process attempts to automatically update the MAMP vHost file. You will need to restart MAMP.", comment: "Informational note about MAMP vHost update in MAMP creation form"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -284,7 +284,7 @@ struct CreateFromMampView: View {
 
             // Action Buttons
             HStack {
-                Button("İptal") {
+                Button(NSLocalizedString("Cancel", comment: "Button title: Cancel action in MAMP creation form")) {
                     if !isCreating { dismiss() }
                 }
                 .keyboardShortcut(.cancelAction)
@@ -297,7 +297,7 @@ struct CreateFromMampView: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                         }
-                        Text("Oluştur")
+                        Text(NSLocalizedString("Create", comment: "Button title: Create action in MAMP creation form"))
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -311,13 +311,13 @@ struct CreateFromMampView: View {
             loadMampSites()
             portString = "\(tunnelManager.defaultMampPort)"
         }
-        .alert("Hata", isPresented: $showErrorAlert) {
-            Button("Tamam") { }
+        .alert(NSLocalizedString("Error", comment: "Alert title: Error in MAMP creation form"), isPresented: $showErrorAlert) {
+            Button(NSLocalizedString("OK", comment: "Alert button: OK in MAMP creation form")) { }
         } message: {
             Text(errorMessage)
         }
-        .alert("Başarılı", isPresented: $showSuccessAlert) {
-            Button("Tamamlandı") { dismiss() }
+        .alert(NSLocalizedString("Success", comment: "Alert title: Success in MAMP creation form"), isPresented: $showSuccessAlert) {
+            Button(NSLocalizedString("Done", comment: "Alert button: Done in MAMP creation form")) { dismiss() }
         } message: {
             Text(successMessage)
         }
@@ -367,16 +367,16 @@ struct CreateFromMampView: View {
                     .font(.system(size: 32))
                     .foregroundColor(.orange)
                 
-                Text("MAMP site dizininde proje klasörü bulunamadı")
+                Text(NSLocalizedString("No project folder found in MAMP site directory", comment: "Empty state message: No MAMP projects found in MAMP creation form"))
                     .font(.headline)
                     .foregroundColor(.orange)
                 
-                Text("Dizin: \(mampSitesDirectoryPath)")
+                Text(String(format: NSLocalizedString("Directory: %@", comment: "Empty state detail: MAMP directory path. Parameter is path in MAMP creation form."), mampSitesDirectoryPath))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
                 Button(action: { NSWorkspace.shared.open(URL(fileURLWithPath: mampSitesDirectoryPath)) }) {
-                    Label("MAMP Site Dizinini Aç", systemImage: "folder")
+                    Label(NSLocalizedString("Open MAMP Site Directory", comment: "Button title: Open MAMP site directory in MAMP creation form"), systemImage: "folder")
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                 }
@@ -410,10 +410,10 @@ struct CreateFromMampView: View {
 
     private func startMampCreationProcess() {
         guard isFormValid else {
-            customAlertTitle = "Hata"
-            customAlertMessage = "Lütfen geçerli bir MAMP sitesi seçin ve tüm alanları doğru doldurun."
+            customAlertTitle = NSLocalizedString("Error", comment: "Custom alert title: Error in MAMP creation")
+            customAlertMessage = NSLocalizedString("Please select a valid MAMP site and fill all fields correctly.", comment: "Custom alert message: Form validation failed for MAMP creation")
             if !documentRootExists && !selectedSite.isEmpty {
-                customAlertMessage += "\n\nSeçilen site için proje kökü bulunamadı: \(documentRoot)"
+                customAlertMessage += String(format: NSLocalizedString("\n\nProject root not found for selected site: %@", comment: "Custom alert message detail: Project root not found. Parameter is path in MAMP creation."), documentRoot)
             }
             customAlertType = .error
             showCustomAlert = true
@@ -421,51 +421,45 @@ struct CreateFromMampView: View {
         }
 
         isCreating = true
-        creationStatus = "'\(tunnelName)' tüneli Cloudflare'da oluşturuluyor..."
+        creationStatus = String(format: NSLocalizedString("Creating tunnel '%@' on Cloudflare...", comment: "Status message: Creating tunnel on Cloudflare. Parameter is tunnel name in MAMP creation."), tunnelName)
 
         tunnelManager.createTunnel(name: tunnelName) { createResult in
             DispatchQueue.main.async {
                 switch createResult {
                 case .success(let tunnelData):
-                    creationStatus = "Yapılandırma dosyası '\(configName).yml' oluşturuluyor..."
+                    creationStatus = String(format: NSLocalizedString("Creating configuration file '%@.yml'...", comment: "Status message: Creating config file. Parameter is config name in MAMP creation."), configName)
 
                     tunnelManager.createConfigFile(configName: self.configName, tunnelUUID: tunnelData.uuid, credentialsPath: tunnelData.jsonPath, hostname: self.hostname, port: self.portString, documentRoot: self.documentRoot) { configResult in
                         DispatchQueue.main.async {
                             switch configResult {
                             case .success(let configPath):
                                 isCreating = false
-                                customAlertTitle = "Başarılı"
-                                customAlertMessage = """
-                                    MAMP sitesi '\(selectedSite)' için tünel '\(tunnelName)' ve yapılandırma '\((configPath as NSString).lastPathComponent)' başarıyla oluşturuldu.
-
-                                    MAMP Apache yapılandırma dosyaları (vhost ve httpd.conf) güncellenmeye çalışıldı.
-
-                                    ⚠️ Ayarların etkili olması için MAMP sunucularını yeniden başlatmanız GEREKİR!
-                                    """
+                                customAlertTitle = NSLocalizedString("Success", comment: "Custom alert title: Success in MAMP creation")
+                                customAlertMessage = String(format: NSLocalizedString("Tunnel '%1$@' and configuration '%2$@' for MAMP site '%3$@' created successfully.\n\nMAMP Apache configuration files (vhost and httpd.conf) were attempted to be updated.\n\n⚠️ You MUST restart MAMP servers for changes to take effect!", comment: "Custom alert message: MAMP tunnel creation successful. Parameters are tunnel name, config file name, MAMP site name."), tunnelName, (configPath as NSString).lastPathComponent, selectedSite)
                                 customAlertType = .success
                                 customAlertAction = { dismiss() }
                                 showCustomAlert = true
 
                             case .failure(let configError):
-                                customAlertTitle = "Hata"
-                                customAlertMessage = "Tünel oluşturuldu ancak yapılandırma/MAMP hatası:\n\(configError.localizedDescription)"
-                                if configError.localizedDescription.contains("Yazma izni hatası") {
-                                    customAlertMessage += "\n\nLütfen vHost dosyası için yazma izinlerini kontrol edin."
+                                customAlertTitle = NSLocalizedString("Error", comment: "Custom alert title: Error in MAMP creation")
+                                customAlertMessage = String(format: NSLocalizedString("Tunnel created, but configuration/MAMP error:\n%@", comment: "Custom alert message: Tunnel created but config/MAMP error. Parameter is error description in MAMP creation."), configError.localizedDescription)
+                                if configError.localizedDescription.contains(NSLocalizedString("Write permission error", comment: "Substring to check for write permission error in configError in MAMP creation")) {
+                                    customAlertMessage += NSLocalizedString("\n\nPlease check write permissions for the vHost file.", comment: "Custom alert message detail: Check vHost write permissions in MAMP creation.")
                                 }
                                 customAlertType = .error
                                 showCustomAlert = true
                                 isCreating = false
-                                creationStatus = "Hata."
+                                creationStatus = NSLocalizedString("Error.", comment: "Status message: Error (short) in MAMP creation")
                             }
                         }
                     }
                 case .failure(let createError):
-                    customAlertTitle = "Hata"
-                    customAlertMessage = "Cloudflare'da tünel oluşturma hatası:\n\(createError.localizedDescription)"
+                    customAlertTitle = NSLocalizedString("Error", comment: "Custom alert title: Error in MAMP creation")
+                    customAlertMessage = String(format: NSLocalizedString("Error creating tunnel on Cloudflare:\n%@", comment: "Custom alert message: Cloudflare tunnel creation error. Parameter is error description in MAMP creation."), createError.localizedDescription)
                     customAlertType = .error
                     showCustomAlert = true
                     isCreating = false
-                    creationStatus = "Hata."
+                    creationStatus = NSLocalizedString("Error.", comment: "Status message: Error (short) in MAMP creation")
                 }
             }
         }

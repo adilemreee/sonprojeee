@@ -34,7 +34,7 @@ struct CreateManagedTunnelView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Yeni Yönetilen Tünel Oluştur")
+                Text(NSLocalizedString("Create New Managed Tunnel", comment: "View title: Create new managed tunnel"))
                     .font(.title2)
                     .fontWeight(.bold)
                 Spacer()
@@ -47,22 +47,22 @@ struct CreateManagedTunnelView: View {
             VStack(spacing: 16) {
                 // Tunnel Details Section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Tünel Detayları")
+                    Text(NSLocalizedString("Tunnel Details", comment: "Section header for tunnel details in managed tunnel creation"))
                         .font(.headline)
                         .padding(.horizontal)
 
                     VStack(spacing: 8) {
-                        FormField(label: "Tünel Adı", text: $tunnelName, placeholder: "Cloudflare'deki Ad (boşluksuz)")
+                        FormField(label: NSLocalizedString("Tunnel Name", comment: "Form field label: Tunnel Name in managed creation"), text: $tunnelName, placeholder: NSLocalizedString("Name on Cloudflare (no spaces)", comment: "Placeholder for tunnel name in managed creation"))
                             .onChange(of: tunnelName) { syncConfigName() }
                         
-                        FormField(label: "Config Adı", text: $configName, placeholder: "Yerel .yml Dosya Adı")
+                        FormField(label: NSLocalizedString("Config Name", comment: "Form field label: Config Name in managed creation"), text: $configName, placeholder: NSLocalizedString("Local .yml File Name", comment: "Placeholder for config file name in managed creation"))
                         
-                        FormField(label: "Hostname", text: $hostname, placeholder: "Erişilecek Alan Adı")
+                        FormField(label: NSLocalizedString("Hostname", comment: "Form field label: Hostname in managed creation"), text: $hostname, placeholder: NSLocalizedString("Domain to access", comment: "Placeholder for hostname in managed creation"))
                         
                         HStack {
-                            Text("Yerel Port")
+                            Text(NSLocalizedString("Local Port", comment: "Form field label: Local Port in managed creation"))
                                 .frame(width: 100, alignment: .trailing)
-                            TextField("Port", text: $portString)
+                            TextField(NSLocalizedString("Port", comment: "Placeholder for local port input in managed creation"), text: $portString)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: portString) { newValue in
@@ -85,26 +85,26 @@ struct CreateManagedTunnelView: View {
                     HStack {
                         Image(systemName: "link.circle.fill")
                             .foregroundColor(.blue)
-                        Text("MAMP Entegrasyonu")
+                        Text(NSLocalizedString("MAMP Integration", comment: "Section header for MAMP integration in managed tunnel creation"))
                             .font(.headline)
                     }
                     .padding(.horizontal)
 
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Proje Kökü")
+                            Text(NSLocalizedString("Project Root", comment: "Form field label: Project Root in managed creation"))
                                 .frame(width: 100, alignment: .trailing)
-                            TextField("MAMP site klasörü", text: $documentRoot)
+                            TextField(NSLocalizedString("MAMP site folder", comment: "Placeholder for MAMP site folder input in managed creation"), text: $documentRoot)
                                 .textFieldStyle(.roundedBorder)
                             Button(action: browseForDocumentRoot) {
                                 Image(systemName: "folder")
                                     .frame(width: 24, height: 24)
                             }
                             .buttonStyle(.bordered)
-                            .help("Proje kök dizinini seç")
+                            .help(NSLocalizedString("Select project root directory", comment: "Help text for browse button in managed creation"))
                         }
 
-                        Toggle("MAMP Apache vHost Dosyasını Güncelle", isOn: $updateVHost)
+                        Toggle(NSLocalizedString("Update MAMP Apache vHost File", comment: "Toggle label for updating MAMP vHost file in managed creation"), isOn: $updateVHost)
                             .padding(.leading, 105)
                             .disabled(documentRoot.isEmpty || !FileManager.default.fileExists(atPath: documentRoot))
 
@@ -112,7 +112,7 @@ struct CreateManagedTunnelView: View {
                             Image(systemName: "info.circle.fill")
                                 .foregroundColor(.blue)
                                 .font(.caption)
-                            Text("Proje kökü geçerliyse ve seçilirse, httpd-vhosts.conf dosyasına giriş eklemeyi dener. MAMP'ın yeniden başlatılması gerekir.")
+                            Text(NSLocalizedString("If project root is valid and selected, attempts to add an entry to httpd-vhosts.conf. MAMP restart required.", comment: "Informational note about MAMP vHost update in managed creation"))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -143,7 +143,7 @@ struct CreateManagedTunnelView: View {
 
             // Action Buttons
             HStack {
-                Button("İptal") {
+                Button(NSLocalizedString("Cancel", comment: "Button title: Cancel action in managed creation form")) {
                     if !isCreating { dismiss() }
                 }
                 .keyboardShortcut(.cancelAction)
@@ -156,7 +156,7 @@ struct CreateManagedTunnelView: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                         }
-                        Text("Oluştur")
+                        Text(NSLocalizedString("Create", comment: "Button title: Create action in managed creation form"))
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -169,13 +169,13 @@ struct CreateManagedTunnelView: View {
         .onAppear {
             portString = "\(tunnelManager.defaultMampPort)" // Set default MAMP port
         }
-        .alert("Hata", isPresented: $showErrorAlert) {
-            Button("Tamam") { }
+        .alert(NSLocalizedString("Error", comment: "Alert title: Error in managed creation form"), isPresented: $showErrorAlert) {
+            Button(NSLocalizedString("OK", comment: "Alert button: OK in managed creation form")) { }
         } message: {
             Text(errorMessage)
         }
-        .alert("Başarılı", isPresented: $showSuccessAlert) {
-            Button("Harika!") { dismiss() }
+        .alert(NSLocalizedString("Success!", comment: "Alert title: Success in managed creation form"), isPresented: $showSuccessAlert) { // Changed "Başarılı" to "Success!" and "Harika!" to "Great!"
+            Button(NSLocalizedString("Great!", comment: "Alert button: Great! in managed creation form")) { dismiss() }
         } message: {
             Text(successMessage)
         }
@@ -207,7 +207,7 @@ struct CreateManagedTunnelView: View {
     }
 
     func browseForDocumentRoot() {
-        let panel = NSOpenPanel(); panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false; panel.message = "Lütfen MAMP Proje Kök Dizinini Seçin"
+        let panel = NSOpenPanel(); panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false; panel.message = NSLocalizedString("Please select MAMP Project Root Directory", comment: "NSOpenPanel message for selecting MAMP project root in managed creation")
         if !documentRoot.isEmpty && FileManager.default.fileExists(atPath: documentRoot) { panel.directoryURL = URL(fileURLWithPath: documentRoot) }
         else if FileManager.default.fileExists(atPath: tunnelManager.mampSitesDirectoryPath) { panel.directoryURL = URL(fileURLWithPath: tunnelManager.mampSitesDirectoryPath) }
 
@@ -218,23 +218,23 @@ struct CreateManagedTunnelView: View {
 
     private func startCreationProcess() {
         guard isFormValid else { /* Build specific error message based on invalid fields */
-             errorMessage = "Lütfen tüm gerekli alanları doğru doldurun."
+             errorMessage = NSLocalizedString("Please fill all required fields correctly.", comment: "Error message: Form validation failed in managed creation")
              // Add specific checks for better feedback (optional)
              showErrorAlert = true; return
         }
         guard let portIntValue = Int(portString), (1...65535).contains(portIntValue) else {
-             errorMessage = "Geçersiz port numarası."; showErrorAlert = true; return
+             errorMessage = NSLocalizedString("Invalid port number.", comment: "Error message: Invalid port number in managed creation"); showErrorAlert = true; return
         }
 
         isCreating = true
-        creationStatus = "'\(tunnelName)' tüneli Cloudflare'da oluşturuluyor..."
+        creationStatus = String(format: NSLocalizedString("Creating tunnel '%@' on Cloudflare...", comment: "Status message: Creating tunnel on Cloudflare. Parameter is tunnel name in managed creation."), tunnelName)
 
         // Step 1: Create the tunnel on Cloudflare
         tunnelManager.createTunnel(name: tunnelName) { createResult in
             DispatchQueue.main.async {
                 switch createResult {
                 case .success(let tunnelData):
-                    creationStatus = "Yapılandırma dosyası '\(configName).yml' oluşturuluyor..."
+                    creationStatus = String(format: NSLocalizedString("Creating configuration file '%@.yml'...", comment: "Status message: Creating config file. Parameter is config name in managed creation."), configName)
                     let finalDocRoot = (self.updateVHost && !self.documentRoot.isEmpty && FileManager.default.fileExists(atPath: self.documentRoot)) ? self.documentRoot : nil
 
                     // Step 2: Create the local config file & potentially update MAMP
@@ -243,19 +243,19 @@ struct CreateManagedTunnelView: View {
                             switch configResult {
                             case .success(let configPath):
                                 isCreating = false
-                                successMessage = "Tünel '\(tunnelName)' ve yapılandırma '\((configPath as NSString).lastPathComponent)' başarıyla oluşturuldu."
-                                if finalDocRoot != nil { successMessage += "\n\nMAMP vHost dosyası güncellenmeye çalışıldı. MAMP sunucularını yeniden başlatmanız gerekebilir." }
+                                successMessage = String(format: NSLocalizedString("Tunnel '%1$@' and configuration '%2$@' created successfully.", comment: "Success message: Tunnel and config created. Parameters are tunnel name, config file name in managed creation."), tunnelName, (configPath as NSString).lastPathComponent)
+                                if finalDocRoot != nil { successMessage += NSLocalizedString("\n\nMAMP vHost file update attempted. You may need to restart MAMP servers.", comment: "Success message detail: MAMP vHost updated in managed creation") }
                                 showSuccessAlert = true // Trigger success alert & dismiss
 
                             case .failure(let configError):
-                                errorMessage = "Tünel oluşturuldu ancak yapılandırma/MAMP hatası:\n\(configError.localizedDescription)"
-                                showErrorAlert = true; isCreating = false; creationStatus = "Hata."
+                                errorMessage = String(format: NSLocalizedString("Tunnel created, but configuration/MAMP error:\n%@", comment: "Error message: Tunnel created but config/MAMP error. Parameter is error description in managed creation."), configError.localizedDescription)
+                                showErrorAlert = true; isCreating = false; creationStatus = NSLocalizedString("Error.", comment: "Status message: Error (short) in managed creation")
                             }
                         }
                     }
                 case .failure(let createError):
-                     errorMessage = "Cloudflare'da tünel oluşturma hatası:\n\(createError.localizedDescription)"
-                     showErrorAlert = true; isCreating = false; creationStatus = "Hata."
+                     errorMessage = String(format: NSLocalizedString("Error creating tunnel on Cloudflare:\n%@", comment: "Error message: Cloudflare tunnel creation error. Parameter is error description in managed creation."), createError.localizedDescription)
+                     showErrorAlert = true; isCreating = false; creationStatus = NSLocalizedString("Error.", comment: "Status message: Error (short) in managed creation")
                 }
              }
         }
